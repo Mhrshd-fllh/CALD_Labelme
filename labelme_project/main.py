@@ -34,20 +34,29 @@ def move_files(source_dir, destination_dir, num_files):
         os.remove(source_path)
 
 def main():
+    #Saving cycle number for folder names
     global cycle_number
+    
+    #Saving main directories
     input_dir = os.path.join(os.getcwd(), 'labelme_project', 'dataset', 'input_files')
     output_dir = os.path.join(os.getcwd(), 'labelme_project', 'dataset', 'output_files')
-    
 
-    #Labeling our train files
+    # Getting Info from user 
+    print("Please move your dataset to 'labelme_project/dataset/input_files/all_images' to start training active learning object detection.")
+    inp = input("Please enter the classes that you want to detect\n")
+    classes = [cl for cl in inp.split()]
+
+    #Moving Files to train and validation path by random choice
     move_files(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'train', 'images'), 200)
     move_files(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'validation', 'images'), 800)
-
-    run_labelme(os.path.join(input_dir, 'train', 'images'), os.path.join(input_dir, 'train', 'annotations', 'labelme'))
-    #Labeling our validation files
-
-    run_labelme(os.path.join(input_dir, 'validation'), os.path.join(input_dir, 'validation'))
     
+    #Labeling our train files
+    run_labelme(os.path.join(input_dir, 'train', 'images'), os.path.join(input_dir, 'train', 'annotations', 'labelme'))
+    
+    #Labeling our validation files
+    run_labelme(os.path.join(input_dir, 'validation'), os.path.join(input_dir, 'validation', 'annotations', 'labelme'))
+
+
     #cald_train()
     cycle_number += 1
 
@@ -55,5 +64,4 @@ def main():
 
 
 if __name__ == '__main__':
-    import argparse
     main()
