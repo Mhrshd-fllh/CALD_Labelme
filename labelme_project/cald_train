@@ -1,0 +1,119 @@
+import os
+import torch
+import torchvision
+import ultralytics
+import yaml
+from tqdm import tqdm
+from pathlib import Path
+from ultralytics import Yolo
+import torch.nn.functional as fun
+import torchvision.transforms.functional as F
+import random
+import numpy as np
+import PIL
+from PIL import Image, ImageDraw
+import datetime
+from scipy.stats import entropy
+import shutil
+
+cycle_number = 0
+
+image_source_dir = os.path.join('dataset', 'input_files', 'train', 'images')
+anno_souce_dir = os.path.join('dataset', 'input_files', 'train', 'annotations', 'yolo')
+validation_source_dir = os.path.join('dataset', 'input_files', 'validation', 'images')
+validation_anno_source_dir = os.path.join('dataset', 'input_files', 'validation', 'annotations', 'yolo')
+
+os.mkdir(os.path.join('dataset', 'input_files', 'active_learning', 'sample_images', f'{cycle_number}'))
+destination_image_source = os.path.join('dataset', 'input_files', 'active_learning', 'sample_images', f'{cycle_number}')
+os.mkdir(os.path.join('dataset', 'input_files', 'active_learning', 'sample_annotations', 'yolo', f'{cycle_number}'))
+destination_anno_source = os.path.join('dataset', 'input_files', 'active_learning', 'sample_annotations', 'yolo', f'{cycle_number}')
+
+
+
+def get_uncertainty(model , image_path):
+    consistency1 = 0
+    consistency2 = 0
+    original_image_results = model(image_source_dir, verbose = False)
+
+    if len(original_image_results[0].boxes) == 0:
+        return 2
+    original_image_confs = original_image_results[0].boxes.conf
+    original_image_boxes = original_image_results[0].boxes.xyxy
+    original_image_labels = original_image_results[0].boxes.cls
+
+    augs = ['flip', 'cutout', 'smaller_resize', 'rotation']
+
+    augmented_images, augmented_boxes = precompute_augmented_images(image_path, original_image_boxes)
+    for aug_image, aug_boxes, aug_name, in zip(augmented_images, augmented_boxes, augs):
+        aug_image_results = model(aug_image, verbose = False)
+        aug_image_confs = aug_image_results[0].boxes.conf
+        aug_image_boxes = aug_image_results[0].boxes.xyxy
+
+        iou_max = 0
+        for orig_box in aug_boxes:
+            max_iou = 0
+            for aug_box in aug_image_boxes:
+                iou = calculate_iou(orig_box, aug_box)
+                if iou > max_iou:
+                    max_iou = iou 
+                iou_max += max_iou
+        avg_iou_max = iou_max / len(aug_boxes)
+        consistency1 += avg_iou_max
+
+
+    max_len = max(len(original_image_confs) , len(aug_image_confs))
+    original_image_confs_padded = np.pad(original_image_confs.cpu().numpy(), (0, max_len - len(original_image_confs)), mode= 'constant')
+    aug_image_confs_padded = np.pad(aug_image_confs.cpu().numpy(), (0, max_len - len(aug_image_confs)), mode= 'constant')
+
+    p = (original_image_confs_padded + aug_image_confs_padded) / 2.0
+    js_divergence = (entropy(original_image_confs_padded, p) + entropy(aug_imgaes_confs_padded, p)) / 2.0
+    consistency2 = 1-  js_divergence
+
+    consistency1 /= len(augs)
+
+    return consistency1 + consistency2
+
+
+torch.cuda.set_device(0)
+random.seed(0)
+torch.manual_seed(0)
+torch.cuda.manual_seed(0)
+torch.cuda.manual_seed_all(0)
+np.random.seed(0)
+
+cycles = 10
+
+model = None
+for c in range(cycles):
+    num_samples = 200
+    image_files = os.listdir(image_source_dir)
+    if c == 0:
+        sample_images = random.sample(image_files)
+    else:
+        uncertainty_scores = {}
+
+        for i, image_file in enumerate(image_files):
+            image_path = os.path.join(image_source_dir)
+            image = Image.Open(image_path)
+            uncertainty_score = get_uncertainty(model, image)
+            uncertainty_scores[image_file] = uncertainty_score
+
+            if i % 100 == 0:
+                print (f'Processed {i} files out of {len(image_files)}')
+        sorted_images = sorted(uncertainty_scores.items(), key = lambda x: x[1])
+        sampeled_images = [image_file for image_file, _ in sorted_images[:num_samples]]
+
+    for image_file in sampeled_images:
+        image_path = os.path.join(image_source_dir, image_file)
+        shutil.move(image_path, destination_image_source)
+
+        label_file = image_file.replace(".jpg", ".txt")
+
+        label_path = os.path.join(anno_souce_dir, label_file)
+        shutil.move(label_path, destination_anno_source)
+
+    print("Number of images: ", len([file for file in os.listdir(destination_image_source) if file.endswith(".jpg")]))
+    print("Number of label : ", len([file for file in os.listdir(destination_anno_source) if file.endswith(".txt")]))
+    
+    model = ('yolo8vn.pt')
+    results = model.train(data = 'dataset.yaml', epochs = 20, batch = 4, workers = 4, momentum = 0.9, weight_decay = 0.0001, plots = True, optimizer = 'SGD')
