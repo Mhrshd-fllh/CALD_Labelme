@@ -26,7 +26,7 @@ def move_files(source_dir, destination_dir, num_files):
 
     for filename in selected_files:
         source_path = os.path.join(source_dir, filename)
-        destination_path = os.paht.join(destination_dir, filename)
+        destination_path = os.path.join(destination_dir, filename)
         shutil.move(source_path, destination_path)
 
     for filename in selected_files:
@@ -45,6 +45,9 @@ def main():
     print("Please move your dataset to 'labelme_project/dataset/input_files/all_images' to start training active learning object detection.")
     inp = input("Please enter the classes that you want to detect\n")
     classes = [cl for cl in inp.split()]
+    label_mapping = {}
+    for i, cls in enumerate(classes):
+        label_mapping[i] = cls
 
     #Moving Files to train and validation path by random choice
     move_files(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'train', 'images'), 200)
