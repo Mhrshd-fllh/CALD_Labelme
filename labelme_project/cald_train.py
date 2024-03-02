@@ -5,7 +5,7 @@ import ultralytics
 import yaml
 from tqdm import tqdm
 from pathlib import Path
-from ultralytics import Yolo
+from ultralytics import YOLO
 import torch.nn.functional as fun
 import torchvision.transforms.functional as F
 import random
@@ -47,20 +47,20 @@ class Yolo:
 
         self.image_files = os.listdir(self.train_path_images)
         if (self.zeroth_cycle):
-            sampeled_images = random.sample(image_files, num_samples)
+            sampeled_images = random.sample(self.image_files, self.num_samples)
         else:
             self.uncertainty_scores = {}
 
-            for i, image_file in enumerate(image_files):
+            for i, image_file in enumerate(self.image_files):
                 image_path = os.path.join(self.train_path_images, image_file)
                 image = Image.open(image_path)
                 uncertainty_score = self.get_uncertainty(self.model, image)
                 self.uncertainty_scores[image_file] = uncertainty_score
 
                 if i % 100 == 0:
-                    print(f'Proccessed {i} files out of {len(image_files)}')
-            sorted_images = sorted(uncertainty_scores.items(), key =lambda x:x[1])
-            sampeled_images = [image_file for image_file, _ in sorted_images[:num_samples]]
+                    print(f'Proccessed {i} files out of {len(self.image_files)}')
+            sorted_images = sorted(self.uncertainty_scores.items(), key =lambda x:x[1])
+            sampeled_images = [image_file for image_file, _ in sorted_images[:self.num_samples]]
 
         for image_file in sampeled_images:
             image_path = os.path.join(self.train_path_images, image_file)
@@ -149,10 +149,10 @@ class Yolo:
     def HorizontalFlip(self,image, bbox):
         if isinstance(image, Image.Image):
             image = F.to_tensor(image)
-        height, width = image.shape([-2, :])
+        height, width = image.shape[-2:]
         image = image.flip(-1)
         b = bbox.clone()
-        b[:, [0,2]] = widht - bbox[: , [2,0]]
+        b[:, [0,2]] = width - bbox[: , [2,0]]
 
         image = F.to_pil_image(image)
 
@@ -178,7 +178,7 @@ class Yolo:
             bottom = top + cutout_size_h
             cutout= torch.FloatTensor([int(left), int(top), int(right), int(bottom)]).to(device)
 
-            overlap_size = intersect(cutout.unsqueeze(0), boxes)
+            overlap_size = self.intersect(cutout.unsqueeze(0), boxes)
             area_boxes = (boxes[: ,2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
             ratio = overlap_size / area_boxes
             if ratio.max().item() > bbox_remove_thres or ratio.max().item() < bbox_min_thres:
@@ -226,7 +226,7 @@ class Yolo:
         alpha = np.cos(angle)
         beta = np.sin(angle)
         
-        AffineMarix = torch.tensor([[alpha, beta, (1 - alpha) * cx - beta * cy],
+        AffineMatrix = torch.tensor([[alpha, beta, (1 - alpha) * cx - beta * cy],
                                     [-beta, alpha, beta * cx + (1 - alpha) * cy]], device = device)
         
         box_width = (boxes[:, 2] - boxes[:, 0]).reshape(-1, 1)
@@ -290,6 +290,22 @@ class Yolo:
         image = F.to_pil_image(image)
 
         return image, new_boxes
+    
+    def intersect(self, boxes1, boxes2):
+        device = boxes1.device
+        n1 = boxes1.size(0)
+        n2 = boxes2.size(0)
+
+        boxes1 = boxes1.to(device)
+        boxes2 = boxes2.to(device)
+
+        max_xy = torch.min(boxes1[:, 2:].unsqueeze().expand(n1, n2, 2),
+                           boxes2[:, 2:].unsqueeze().expand(n1, n2, 2))
+        
+        min_xy = torch.max(boxes1[:, 2:].unsqueeze().expand(n1, n2, 2),
+                           boxes2[:, 2:].unsqueeze().expand(n1, n2, 2))
+        inter = torch.clamp(max_xy - min_xy, min = 0)
+        return inter[:, :, 0] * inter[:, :, 1]
 
 
 
