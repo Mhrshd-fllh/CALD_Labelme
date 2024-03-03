@@ -3,7 +3,7 @@ import subprocess
 from dataset import converter
 import random
 import shutil
-
+import yaml_creator
 
 #Global Variables 
 cycle_number = 0
@@ -57,8 +57,15 @@ def main():
     run_labelme(os.path.join(input_dir, 'train', 'images'), os.path.join(input_dir, 'train', 'annotations', 'labelme'))
     
     #Labeling our validation files
-    run_labelme(os.path.join(input_dir, 'validation'), os.path.join(input_dir, 'validation', 'annotations', 'labelme'))
+    run_labelme(os.path.join(input_dir, 'validation', 'images'), os.path.join(input_dir, 'validation', 'annotations', 'labelme'))
+    train_dir = os.path.join(input_dir, 'train')
+    validation_dir = os.path.join(input_dir, 'validation')
 
+    convert = converter.DatasetConverter(os.path.join(train_dir, 'annotations', 'labelme'), os.path.join(train_dir, 'annotations', 'yolo'), label_mapping)
+    convert.process_labelme_annotations()
+    convert = converter.DatasetConverter(os.path.join(validation_dir, 'annotations', 'labelme'), os.path.join(validation_dir, 'annotations', 'yolo'), label_mapping)
+    convert.process_labelme_annotations()
+    yaml_creator.create_yaml_file(label_mapping)
 
     #cald_train()
     cycle_number += 1

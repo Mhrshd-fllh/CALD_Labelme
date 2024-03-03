@@ -2,19 +2,14 @@ import os
 import json
 
 class DatasetConverter:
-    def __init__(self, input_dir, annotations_path, label_mapping, output_dir, cycle_number):
+    def __init__(self, input_dir,label_mapping, output_dir):
         self.input_dir = input_dir
-        self.annotations = annotations_path
         self.label_mapping = label_mapping
         self.output_dir = output_dir
-        self.cycle_number = cycle_number
         self.train_path = os.path.join(self.input_dir, 'train')
         self.validation_path = os.path.join(self.input_dir, 'validation')  
 
     def process_labelme_annotations(self):
-        # Ensure that the output directory exists
-        os.makedirs(os.path.join(self.input_dir, self.cycle_number), exist_ok=True)
-
         # Process each JSON file in the input_directory
         for filename in os.listdir(self.input_dir):
             if filename.endswith(".json"):
@@ -33,8 +28,11 @@ class DatasetConverter:
             for shape in data['shapes']:
                 label = shape['label']
                 points = shape['points']
+                label = {i for i in self.label_mapping if self.label_mapping[i] == label}
                 x, y, w, h = self.get_yolo_coordinates(points, image_height, image_width)
-                yolo_file.write(f'{label} {x} {y} {w} {h}\n', image_height, image_width)
+                yolo_file.write(f'{label} {x} {y} {w} {h}\n')
+                yolo_file.write(f'{image_height} ')
+                yolo_file.write(f'{image_width}')
 
     def get_yolo_coordinates(self, points, image_height, image_width):
         x = (points[0][0] + points[1][0]) / (2 * image_width)
