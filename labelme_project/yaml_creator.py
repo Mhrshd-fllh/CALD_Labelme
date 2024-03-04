@@ -7,8 +7,8 @@ def create_yaml_file(label_mapping):
     train = 'train/images'
     val = 'validation/images'
 
-    with open('dataset.yaml', 'w') as dataset_file:
-        dataset_file.write(f'path: f{path_}\n')
+    with open('labelme_project/dataset.yaml', 'w') as dataset_file:
+        dataset_file.write(f'path: {path_}\n')
         dataset_file.write(f'train: \n')
         dataset_file.write(f'  - {train}\n')
         dataset_file.write(f'  - {val}\n')

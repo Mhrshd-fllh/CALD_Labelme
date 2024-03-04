@@ -4,7 +4,7 @@ from dataset import converter
 import random
 import shutil
 import yaml_creator
-
+import cald_train
 #Global Variables 
 cycle_number = 0
 
@@ -39,7 +39,6 @@ def main():
     
     #Saving main directories
     input_dir = os.path.join(os.getcwd(), 'labelme_project', 'dataset', 'input_files')
-    output_dir = os.path.join(os.getcwd(), 'labelme_project', 'dataset', 'output_files')
 
     # Getting Info from user 
     print("Please move your dataset to 'labelme_project/dataset/input_files/all_images' to start training active learning object detection.")
@@ -48,9 +47,20 @@ def main():
     label_mapping = {}
     for i, cls in enumerate(classes):
         label_mapping[i] = cls
+    
+    cycle_number = int(input(" Enter Cycle Number you want to train yolo:\n"))
+    for i in range(cycle_number):
+        os.mkdir(os.path.join(input_dir, 'active_learning', 'sample_images', f'{i}'))
+        os.mkdir(os.path.join(input_dir, 'active_learning', 'sample_annotations', 'yolo', f'{i}'))
+        os.mkdir(os.path.join(input_dir, 'active_learning', 'sample_annotations', 'labelme', f'{i}'))
+    yolo = cald_train.ModelConsistency(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'train', 'images'),
+                                       os.path.join(input_dir, 'train', 'annotations', 'yolo'), True,
+                                       os.path.join(input_dir, 'active_learning', 'sample_images', '0'),
+                                       label_mapping, 200)
 
-    #Moving Files to train and validation path by random choice
-    move_files(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'train', 'images'), 200)
+
+    # Moving Files to train and validation path by random choice
+    # move_files(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'train', 'images'), 200)
     move_files(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'validation', 'images'), 800)
     
     #Labeling our train files
@@ -66,10 +76,16 @@ def main():
     convert = converter.DatasetConverter(os.path.join(validation_dir, 'annotations', 'labelme'), os.path.join(validation_dir, 'annotations', 'yolo'), label_mapping)
     convert.process_labelme_annotations()
     yaml_creator.create_yaml_file(label_mapping)
+    
 
-    #cald_train()
-    cycle_number += 1
 
+    for i in range(1, cycle_number):
+        yolo = cald_train.ModelConsistency(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'train', 'images'),
+                                           os.path.join(input_dir, 'train', 'validation', 'yolo'), False,
+                                           os.path.join(input_dir, 'active_learning', 'sampeled_images', f'{i}'),
+                                           label_mapping, 500)
+        run_labelme(os.path.join(input_dir, 'active_learning', 'sampeled_images', f'{i}'), os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'labelme', f'{i}'))
+        converter.DatasetConverter(os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'labelme', f'{i}'), label_mapping, os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'yolo')) 
     
 
 

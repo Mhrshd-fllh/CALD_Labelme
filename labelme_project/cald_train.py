@@ -5,7 +5,6 @@ import ultralytics
 import yaml
 from tqdm import tqdm
 from pathlib import Path
-from ultralytics import YOLO
 import torch.nn.functional as fun
 import torchvision.transforms.functional as F
 import random
@@ -24,7 +23,7 @@ torch.cuda.manual_seed(0)
 torch.cuda.manual_seed_all(0)
 np.random.seed(0)
 
-class Yolo:
+class ModelConsistency:
     def __init__(self,unlabeled_images,train_path_images, train_path_annotations, zeroth_cycle, destination_path, classes, num_samples):
         self.unlabeled_images = unlabeled_images
         self.data_path = 'dataset.yaml'
