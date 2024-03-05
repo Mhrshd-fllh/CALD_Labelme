@@ -15,7 +15,7 @@ def create_yaml_file(label_mapping):
 
         dataset_file.write(f'names: \n')
         for i , label in label_mapping.items():
-            dataset_file.write(f'{  {i}: {label}}\n')
+            dataset_file.write(f'  {i}: {label}\n')
 
     dataset_file.close()
 

@@ -16,7 +16,7 @@ from scipy.stats import entropy
 import shutil
 from ultralytics.models import YOLO
 
-torch.cuda.set_device(0)
+# torch.cuda.set_device(0)
 random.seed(0)
 torch.manual_seed(0)
 torch.cuda.manual_seed(0)
@@ -24,11 +24,11 @@ torch.cuda.manual_seed_all(0)
 np.random.seed(0)
 
 class ModelConsistency:
-    def __init__(self,unlabeled_images,train_path_images, train_path_annotations, zeroth_cycle, destination_path, classes, num_samples):
+    def __init__(self, unlabeled_images, train_path, zeroth_cycle, destination_path, classes, num_samples):
         self.unlabeled_images = unlabeled_images
-        self.data_path = 'dataset.yaml'
-        self.train_path_images = train_path_images
-        self.train_path_annotations = train_path_annotations
+        self.data_path = 'label_me_project/dataset.yaml'
+        self.train_path_images = os.path.join(train_path, 'images')
+        self.train_path_annotations = os.path.join(train_path, 'annotations', 'yolo')
         self.zeroth_cycle = zeroth_cycle # Boolean Type
         self.destination_path_images = os.path.join(destination_path, 'images')
         self.destination_path_annotations = os.path.join(destination_path, 'annotations', 'yolo')
@@ -44,16 +44,16 @@ class ModelConsistency:
         torch.cuda.manual_seed_all(0)
         np.random.seed(0)
 
-        self.image_files = os.listdir(self.train_path_images)
+        self.image_files = os.listdir(self.unlabeled_images)
         if (self.zeroth_cycle):
             sampeled_images = random.sample(self.image_files, self.num_samples)
         else:
             self.uncertainty_scores = {}
 
             for i, image_file in enumerate(self.image_files):
-                image_path = os.path.join(self.train_path_images, image_file)
+                image_path = os.path.join(self.unlabeled_images, image_file)
                 image = Image.open(image_path)
-                uncertainty_score = self.get_uncertainty(self.model, image)
+                uncertainty_score = self.get_uncertainty(image)
                 self.uncertainty_scores[image_file] = uncertainty_score
 
                 if i % 100 == 0:
@@ -67,7 +67,7 @@ class ModelConsistency:
 
             label_file = image_file.replace('.jpg', '.txt')
             label_path = os.path.join(self.train_path_images, label_file)
-            shutil.move(label_file, self.destination_path_annotations)
+            shutil.move(label_path, self.destination_path_annotations)
 
         print(f'Number of Images: ' , len([file for file in os.listdir(self.destination_path_images)]))
         print(f'Number of Labels: ' , len([file for file in os.listdir(self.destination_path_annotations)]))
@@ -75,10 +75,10 @@ class ModelConsistency:
     
     
 
-    def get_uncertainty(self, model , image_path):
+    def get_uncertainty(self , image_path):
         consistency1 = 0
         consistency2 = 0
-        original_image_results = model(self.train_path_images, verbose = False)
+        original_image_results = self.model.predict(image_path, verbose = False)
 
         if len(original_image_results[0].boxes) == 0:
             return 2
@@ -90,7 +90,7 @@ class ModelConsistency:
 
         augmented_images, augmented_boxes = self.precompute_augmented_images(image_path, original_image_boxes)
         for aug_image, aug_boxes, aug_name, in zip(augmented_images, augmented_boxes, augs):
-            aug_image_results = model(aug_image, verbose = False)
+            aug_image_results = self.model.predict(aug_image, verbose = False)
             aug_image_confs = aug_image_results[0].boxes.conf
             aug_image_boxes = aug_image_results[0].boxes.xyxy
 

@@ -49,20 +49,15 @@ def main():
         label_mapping[i] = cls
     
     cycle_number = int(input(" Enter Cycle Number you want to train yolo:\n"))
-    for i in range(cycle_number):
-        os.mkdir(os.path.join(input_dir, 'active_learning', 'sample_images', f'{i}'))
-        os.mkdir(os.path.join(input_dir, 'active_learning', 'sample_annotations', 'yolo', f'{i}'))
-        os.mkdir(os.path.join(input_dir, 'active_learning', 'sample_annotations', 'labelme', f'{i}'))
-    yolo = cald_train.ModelConsistency(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'train', 'images'),
-                                       os.path.join(input_dir, 'train', 'annotations', 'yolo'), True,
-                                       os.path.join(input_dir, 'active_learning', 'sample_images', '0'),
+
+    # move_files(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'train', 'images'), 200)
+    move_files(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'validation', 'images'), 800)
+    yolo = cald_train.ModelConsistency(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'train'), True,
+                                       os.path.join(input_dir, 'active_learning', 'sampeled_images'),
                                        label_mapping, 200)
 
 
-    # Moving Files to train and validation path by random choice
-    # move_files(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'train', 'images'), 200)
-    move_files(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'validation', 'images'), 800)
-    
+
     #Labeling our train files
     run_labelme(os.path.join(input_dir, 'train', 'images'), os.path.join(input_dir, 'train', 'annotations', 'labelme'))
     
@@ -80,13 +75,19 @@ def main():
 
 
     for i in range(1, cycle_number):
-        yolo = cald_train.ModelConsistency(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'train', 'images'),
-                                           os.path.join(input_dir, 'train', 'validation', 'yolo'), False,
-                                           os.path.join(input_dir, 'active_learning', 'sampeled_images', f'{i}'),
+        yolo = cald_train.ModelConsistency(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'train'),
+                                           False,
+                                           os.path.join(input_dir, 'active_learning', 'sampeled_images'),
                                            label_mapping, 500)
+        yolo.train_model()
         run_labelme(os.path.join(input_dir, 'active_learning', 'sampeled_images', f'{i}'), os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'labelme', f'{i}'))
         converter.DatasetConverter(os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'labelme', f'{i}'), label_mapping, os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'yolo')) 
-    
+        move_files(os.path.join(input_dir, 'active_learning', 'sampeled_images'), os.path.join(input_dir, 'train', 'images'), 500)
+        move_files(os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'yolo'), os.path.join(input_dir, 'train', 'annotations', 'yolo'), 500)
+        labelme_annotations = os.path.join(input_dir, 'active_learning', 'sampeled_annotaions', 'labelme')
+        for file in os.listdir(labelme_annotations):
+            source_path = os.path.join(labelme_annotations, file)
+            os.remove(source_path)        
 
 
 if __name__ == '__main__':
