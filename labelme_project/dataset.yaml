@@ -1,5 +1,0 @@
-path: dataset/input_files
-train: 
-  - train/images
-  - validation/images
-names: 
