@@ -5,9 +5,6 @@ import random
 import shutil
 import yaml_creator
 import cald_train
-#Global Variables 
-cycle_number = 0
-
 
 def run_labelme(input_dir, output_dir):
     # Replace 'labelme' with the actual path to the labelme executable
@@ -34,9 +31,6 @@ def move_files(source_dir, destination_dir, num_files):
         os.remove(source_path)
 
 def main():
-    #Saving cycle number for folder names
-    global cycle_number
-    
     #Saving main directories
     input_dir = os.path.join(os.getcwd(), 'labelme_project', 'dataset', 'input_files')
 
@@ -48,7 +42,7 @@ def main():
     for i, cls in enumerate(classes):
         label_mapping[i] = cls
     
-    cycle_number = int(input(" Enter Cycle Number you want to train yolo:\n"))
+    cycle_number = int(input("Enter Cycle Number you want to train yolo:\n"))
 
     # move_files(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'train', 'images'), 200)
     move_files(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'validation', 'images'), 800)

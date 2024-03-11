@@ -78,7 +78,7 @@ class ModelConsistency:
     def get_uncertainty(self , image_path):
         consistency1 = 0
         consistency2 = 0
-        original_image_results = self.model.predict(image_path, verbose = False)
+        original_image_results = self.model(self.unlabeled_image, verbose = False)
 
         if len(original_image_results[0].boxes) == 0:
             return 2
@@ -90,7 +90,7 @@ class ModelConsistency:
 
         augmented_images, augmented_boxes = self.precompute_augmented_images(image_path, original_image_boxes)
         for aug_image, aug_boxes, aug_name, in zip(augmented_images, augmented_boxes, augs):
-            aug_image_results = self.model.predict(aug_image, verbose = False)
+            aug_image_results = self.model(aug_image, verbose = False)
             aug_image_confs = aug_image_results[0].boxes.conf
             aug_image_boxes = aug_image_results[0].boxes.xyxy
 
