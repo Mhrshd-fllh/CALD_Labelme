@@ -47,6 +47,14 @@ class ModelConsistency:
         self.image_files = os.listdir(self.unlabeled_images)
         if (self.zeroth_cycle):
             sampeled_images = random.sample(self.image_files, self.num_samples)
+
+            for image_file in sampeled_images:
+                image_path = os.path.join(self.train_path_images, image_file)
+                shutil.move(image_path, self.destination_path_images)
+
+                label_file = image_file.replace('.jpg', '.txt')
+                label_path = os.path.join(self.train_path_images, label_file)
+                shutil.move(label_path, self.destination_path_annotations)
         else:
             self.uncertainty_scores = {}
 

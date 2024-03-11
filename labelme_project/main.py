@@ -26,9 +26,6 @@ def move_files(source_dir, destination_dir, num_files):
         destination_path = os.path.join(destination_dir, filename)
         shutil.move(source_path, destination_path)
 
-    for filename in selected_files:
-        source_path = os.path.join(source_dir, filename)
-        os.remove(source_path)
 
 def main():
     #Saving main directories
@@ -60,9 +57,9 @@ def main():
     train_dir = os.path.join(input_dir, 'train')
     validation_dir = os.path.join(input_dir, 'validation')
 
-    convert = converter.DatasetConverter(os.path.join(train_dir, 'annotations', 'labelme'), os.path.join(train_dir, 'annotations', 'yolo'), label_mapping)
+    convert = converter.DatasetConverter(os.path.join(train_dir, 'annotations', 'labelme'), label_mapping, os.path.join(train_dir, 'annotations', 'yolo'))
     convert.process_labelme_annotations()
-    convert = converter.DatasetConverter(os.path.join(validation_dir, 'annotations', 'labelme'), os.path.join(validation_dir, 'annotations', 'yolo'), label_mapping)
+    convert = converter.DatasetConverter(os.path.join(validation_dir, 'annotations', 'labelme'), label_mapping, os.path.join(validation_dir, 'annotations', 'yolo'))
     convert.process_labelme_annotations()
     yaml_creator.create_yaml_file(label_mapping)
     
