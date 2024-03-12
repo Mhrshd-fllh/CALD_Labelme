@@ -69,12 +69,19 @@ def main():
         yolo = cald_train.ModelConsistency(os.path.join(input_dir, 'all_images'), os.path.join(input_dir, 'train'),
                                            False,
                                            os.path.join(input_dir, 'active_learning', 'sampeled_images'),
-                                           label_mapping, 500)
+                                           label_mapping, 100)
         yolo.train_model()
         run_labelme(os.path.join(input_dir, 'active_learning', 'sampeled_images', f'{i}'), os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'labelme', f'{i}'))
-        converter.DatasetConverter(os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'labelme', f'{i}'), label_mapping, os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'yolo')) 
-        move_files(os.path.join(input_dir, 'active_learning', 'sampeled_images'), os.path.join(input_dir, 'train', 'images'), 500)
-        move_files(os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'yolo'), os.path.join(input_dir, 'train', 'annotations', 'yolo'), 500)
+        converter.DatasetConverter(os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'labelme', f'{i}'), label_mapping, os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'yolo'))
+        files = os.listdir(os.path.join(input_dir, 'active_learning', 'sampeled_images'))
+        random_validation = random.sample(files, 20)
+        for image_file in random_validation:
+            image_path = os.path.join(input_dir, 'active_learning', 'sampeled_images', image_file)
+            label_path = os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'yolo', f"{os.path.splitext(image_file)[0]}.txt")
+            shutil.move(image_path, os.path.join(input_dir, 'validation', 'images'))
+            shutil.move(label_path, os.path.join(input_dir, 'validation', 'annotations', 'yolo'))
+        move_files(os.path.join(input_dir, 'active_learning', 'sampeled_images'), os.path.join(input_dir, 'train', 'images'), 80)
+        move_files(os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'yolo'), os.path.join(input_dir, 'train', 'annotations', 'yolo'), 80)
         labelme_annotations = os.path.join(input_dir, 'active_learning', 'sampeled_annotaions', 'labelme')
         for file in os.listdir(labelme_annotations):
             source_path = os.path.join(labelme_annotations, file)

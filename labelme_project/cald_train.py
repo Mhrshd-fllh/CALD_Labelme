@@ -69,13 +69,13 @@ class ModelConsistency:
             sorted_images = sorted(self.uncertainty_scores.items(), key =lambda x:x[1])
             sampeled_images = [image_file for image_file, _ in sorted_images[:self.num_samples]]
 
-        for image_file in sampeled_images:
-            image_path = os.path.join(self.train_path_images, image_file)
-            shutil.move(image_path, self.destination_path_images)
+            for image_file in sampeled_images:
+                image_path = os.path.join(self.train_path_images, image_file)
+                shutil.move(image_path, self.destination_path_images)
 
-            label_file = image_file.replace('.jpg', '.txt')
-            label_path = os.path.join(self.train_path_images, label_file)
-            shutil.move(label_path, self.destination_path_annotations)
+                label_file = image_file.replace('.jpg', '.txt')
+                label_path = os.path.join(self.train_path_images, label_file)
+                shutil.move(label_path, self.destination_path_annotations)
 
         print(f'Number of Images: ' , len([file for file in os.listdir(self.destination_path_images)]))
         print(f'Number of Labels: ' , len([file for file in os.listdir(self.destination_path_annotations)]))
@@ -86,7 +86,7 @@ class ModelConsistency:
     def get_uncertainty(self , image_path):
         consistency1 = 0
         consistency2 = 0
-        original_image_results = self.model(self.unlabeled_image, verbose = False)
+        original_image_results = self.model(self.unlabeled_images, verbose = False)
 
         if len(original_image_results[0].boxes) == 0:
             return 2
