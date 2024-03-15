@@ -80,7 +80,7 @@ class ModelConsistency:
         print(f'Number of Images: ' , len([file for file in os.listdir(self.destination_path_images)]))
         print(f'Number of Labels: ' , len([file for file in os.listdir(self.destination_path_annotations)]))
         self.model.train(data = self.data_path, epochs = 20, momentum = 0.9, optimizer = 'SGD', batch = 4, workers = 4,plots = True, weight_decay = 0.0001)
-    
+        self.model.save(os.path.join(os.getcwd(), 'labelme_project', 'last_save.pt'))
     
 
     def get_uncertainty(self , image_path):
