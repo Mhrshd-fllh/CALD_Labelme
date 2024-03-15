@@ -26,7 +26,7 @@ np.random.seed(0)
 class ModelConsistency:
     def __init__(self, unlabeled_images, train_path, zeroth_cycle, destination_path, classes, num_samples):
         self.unlabeled_images = unlabeled_images
-        self.data_path = 'label_me_project/dataset.yaml'
+        self.data_path = os.path.join(os.getcwd(), 'labelme_project', 'dataset.yaml')
         self.train_path_images = os.path.join(train_path, 'images')
         self.train_path_annotations = os.path.join(train_path, 'annotations', 'yolo')
         self.zeroth_cycle = zeroth_cycle # Boolean Type
@@ -49,12 +49,8 @@ class ModelConsistency:
             sampeled_images = random.sample(self.image_files, self.num_samples)
 
             for image_file in sampeled_images:
-                image_path = os.path.join(self.train_path_images, image_file)
+                image_path = os.path.join(self.unlabeled_images, image_file)
                 shutil.move(image_path, self.destination_path_images)
-
-                label_file = image_file.replace('.jpg', '.txt')
-                label_path = os.path.join(self.train_path_images, label_file)
-                shutil.move(label_path, self.destination_path_annotations)
         else:
             self.uncertainty_scores = {}
 
@@ -70,12 +66,8 @@ class ModelConsistency:
             sampeled_images = [image_file for image_file, _ in sorted_images[:self.num_samples]]
 
             for image_file in sampeled_images:
-                image_path = os.path.join(self.train_path_images, image_file)
+                image_path = os.path.join(self.unlabeled_images, image_file)
                 shutil.move(image_path, self.destination_path_images)
-
-                label_file = image_file.replace('.jpg', '.txt')
-                label_path = os.path.join(self.train_path_images, label_file)
-                shutil.move(label_path, self.destination_path_annotations)
 
         print(f'Number of Images: ' , len([file for file in os.listdir(self.destination_path_images)]))
         print(f'Number of Labels: ' , len([file for file in os.listdir(self.destination_path_annotations)]))

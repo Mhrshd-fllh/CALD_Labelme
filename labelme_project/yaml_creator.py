@@ -3,7 +3,7 @@ import os
 
 def create_yaml_file(label_mapping):
     
-    path_ = 'dataset/input_files'
+    path_ = os.path.join(os.getcwd(), 'labelme_project', 'dataset')
     train = 'train/images'
     val = 'validation/images'
 
@@ -11,6 +11,7 @@ def create_yaml_file(label_mapping):
         dataset_file.write(f'path: {path_}\n')
         dataset_file.write(f'train: \n')
         dataset_file.write(f'  - {train}\n')
+        dataset_file.write(f'val: \n')
         dataset_file.write(f'  - {val}\n')
 
         dataset_file.write(f'names: \n')
