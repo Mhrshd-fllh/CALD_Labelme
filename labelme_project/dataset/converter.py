@@ -30,9 +30,8 @@ class DatasetConverter:
                 points = shape['points']
                 label = {i for i in self.label_mapping if self.label_mapping[i] == label}
                 x, y, w, h = self.get_yolo_coordinates(points, image_height, image_width)
-                yolo_file.write(f'{label} {x} {y} {w} {h}\n')
-                yolo_file.write(f'{image_height} ')
-                yolo_file.write(f'{image_width}')
+                yolo_file.write(f'{label.pop()} {x} {y} {w} {h}\n')
+                
 
     def get_yolo_coordinates(self, points, image_height, image_width):
         x = (points[0][0] + points[1][0]) / (2 * image_width)

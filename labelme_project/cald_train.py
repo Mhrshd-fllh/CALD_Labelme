@@ -36,7 +36,8 @@ class ModelConsistency:
         self.classes = classes
         self.num_samples = num_samples
 
-    def train_model(self):
+
+    def select_images(self):
         torch.cuda.set_device(0)
         random.seed(0)
         torch.manual_seed(0)
@@ -69,9 +70,11 @@ class ModelConsistency:
                 image_path = os.path.join(self.unlabeled_images, image_file)
                 shutil.move(image_path, self.destination_path_images)
 
+    def train_model(self):
+        
         print(f'Number of Images: ' , len([file for file in os.listdir(self.destination_path_images)]))
         print(f'Number of Labels: ' , len([file for file in os.listdir(self.destination_path_annotations)]))
-        self.model.train(data = self.data_path, epochs = 20, momentum = 0.9, optimizer = 'SGD', batch = 4, workers = 4,plots = True, weight_decay = 0.0001)
+        self.model.train(data = self.data_path, epochs = 20, momentum = 0.9, optimizer = 'SGD', batch = 4, workers = 4, weight_decay = 0.0001)
         self.model.save(os.path.join(os.getcwd(), 'labelme_project', 'last_save.pt'))
     
 
