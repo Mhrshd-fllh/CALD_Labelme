@@ -28,10 +28,10 @@ class ModelConsistency:
         self.unlabeled_images = unlabeled_images
         self.data_path = os.path.join(os.getcwd(), 'labelme_project', 'dataset.yaml')
         self.train_path_images = os.path.join(train_path, 'images')
-        self.train_path_annotations = os.path.join(train_path, 'annotations', 'yolo')
+        self.train_path_annotations = os.path.join(train_path, 'labels')
         self.zeroth_cycle = zeroth_cycle # Boolean Type
         self.destination_path_images = os.path.join(destination_path, 'images')
-        self.destination_path_annotations = os.path.join(destination_path, 'annotations', 'yolo')
+        self.destination_path_annotations = os.path.join(destination_path, 'labels')
         self.model = YOLO('yolov8n.pt', verbose = False)
         self.classes = classes
         self.num_samples = num_samples
@@ -74,7 +74,7 @@ class ModelConsistency:
         
         print(f'Number of Images: ' , len([file for file in os.listdir(self.destination_path_images)]))
         print(f'Number of Labels: ' , len([file for file in os.listdir(self.destination_path_annotations)]))
-        self.model.train(data = self.data_path, epochs = 20, momentum = 0.9, optimizer = 'SGD', batch = 4, workers = 4, weight_decay = 0.0001)
+        self.model.train(data = self.data_path, epochs = 20, momentum = 0.9, optimizer = 'SGD', batch = 4, workers = 4, weight_decay = 0.0001, plots = False)
         self.model.save(os.path.join(os.getcwd(), 'labelme_project', 'last_save.pt'))
     
 

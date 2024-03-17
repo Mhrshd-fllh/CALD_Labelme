@@ -22,6 +22,8 @@ def move_files(source_dir, destination_dir, num_files):
     selected_files = random.sample(all_files, min(num_files, len(all_files)))
 
     for filename in selected_files:
+        if filename.endswith('.md'):
+            continue
         source_path = os.path.join(source_dir, filename)
         destination_path = os.path.join(destination_dir, filename)
         shutil.move(source_path, destination_path)
@@ -77,7 +79,7 @@ def main():
         random_validation = random.sample(files, 20)
         for image_file in random_validation:
             image_path = os.path.join(input_dir, 'active_learning', 'sampeled_images', image_file)
-            label_path = os.path.join(input_dir, 'active_learning', 'sampeled_annotations', 'yolo', f"{os.path.splitext(image_file)[0]}.txt")
+            label_path = os.path.join(input_dir, 'active_learning', 'labels', f"{os.path.splitext(image_file)[0]}.txt")
             shutil.move(image_path, os.path.join(input_dir, 'validation', 'images'))
             shutil.move(label_path, os.path.join(input_dir, 'validation', 'labels'))
         move_files(os.path.join(input_dir, 'active_learning', 'sampeled_images'), os.path.join(input_dir, 'train', 'images'), 80)
