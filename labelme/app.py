@@ -7,6 +7,7 @@ import os
 import os.path as osp
 import re
 import webbrowser
+import sys
 
 import imgviz
 import natsort
@@ -33,7 +34,7 @@ from labelme.widgets import ToolBar
 from labelme.widgets import UniqueLabelQListWidget
 from labelme.widgets import ZoomWidget
 
-from . import utils
+import utils
 
 # FIXME
 # - [medium] Set max zoom value to something big enough for FitWidth/Window
@@ -220,12 +221,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tr("Open image or label file"),
         )
         opendir = action(
-            self.tr("Open Dir"),
+            self.tr("&Open Dir"),
             self.openDirDialog,
             shortcuts["open_dir"],
             "open",
             self.tr("Open Dir"),
         )
+
         openNextImg = action(
             self.tr("&Next Image"),
             self.openNextImg,
@@ -369,11 +371,13 @@ class MainWindow(QtWidgets.QMainWindow):
             enabled=False,
         )
         createAiPolygonMode.changed.connect(
-            lambda: self.canvas.initializeAiModel(
-                name=self._selectAiModelComboBox.currentText()
+            lambda: (
+                self.canvas.initializeAiModel(
+                    name=self._selectAiModelComboBox.currentText()
+                )
+                if self.canvas.createMode == "ai_polygon"
+                else None
             )
-            if self.canvas.createMode == "ai_polygon"
-            else None
         )
         createAiMaskMode = action(
             self.tr("Create AI-Mask"),
@@ -384,12 +388,17 @@ class MainWindow(QtWidgets.QMainWindow):
             enabled=False,
         )
         createAiMaskMode.changed.connect(
-            lambda: self.canvas.initializeAiModel(
-                name=self._selectAiModelComboBox.currentText()
+            lambda: (
+                self.canvas.initializeAiModel(
+                    name=self._selectAiModelComboBox.currentText()
+                )
+                if self.canvas.createMode == "ai_mask"
+                else None
             )
-            if self.canvas.createMode == "ai_mask"
-            else None
         )
+
+        train = action("Train", self.trainModel, "train the model", icon="train")
+
         editMode = action(
             self.tr("Edit Polygons"),
             self.setEditMode,
@@ -623,6 +632,7 @@ class MainWindow(QtWidgets.QMainWindow):
             save=save,
             saveAs=saveAs,
             open=open_,
+            train=train,
             close=close,
             deleteFile=deleteFile,
             toggleKeepPrevMode=toggle_keep_prev_mode,
@@ -734,6 +744,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 close,
                 deleteFile,
                 None,
+                train,
                 quit,
             ),
         )
@@ -798,17 +809,20 @@ class MainWindow(QtWidgets.QMainWindow):
             model_index = 0
         self._selectAiModelComboBox.setCurrentIndex(model_index)
         self._selectAiModelComboBox.currentIndexChanged.connect(
-            lambda: self.canvas.initializeAiModel(
-                name=self._selectAiModelComboBox.currentText()
+            lambda: (
+                self.canvas.initializeAiModel(
+                    name=self._selectAiModelComboBox.currentText()
+                )
+                if self.canvas.createMode in ["ai_polygon", "ai_mask"]
+                else None
             )
-            if self.canvas.createMode in ["ai_polygon", "ai_mask"]
-            else None
         )
 
         self.tools = self.toolbar("Tools")
         self.actions.tool = (
             open_,
             opendir,
+            train,
             openPrevImg,
             openNextImg,
             save,
@@ -2105,3 +2119,15 @@ class MainWindow(QtWidgets.QMainWindow):
                     images.append(relativePath)
         images = natsort.os_sorted(images)
         return images
+
+    def trainModel(self):
+        print(2)
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    app.setApplicationName("Salam")
+    win = MainWindow()
+    win.show()
+    win.raise_()
+    sys.exit(app.exec())

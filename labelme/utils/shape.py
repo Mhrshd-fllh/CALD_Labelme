@@ -35,7 +35,7 @@ def newAction(
     checked=False,
 ):
     """Create a new action and assign callbacks, shortcuts, etc."""
-    a = QtWidgets.QAction(text, parent)
+    a = QtWidgets.QtAction(text, parent)
     if icon is not None:
         a.setIconText(text.replace(" ", "\n"))
         a.setIcon(newIcon(icon))
@@ -67,7 +67,7 @@ def addActions(widget, actions):
 
 
 def labelValidator():
-    return QtGui.QRegExpValidator(QtCore.QRegExp(r"^[^ \t].+"), None)
+    return QtGui.QRegExpValidator(QtCore.QtRegExp(r"^[^ \t].+"), None)
 
 
 class struct(object):

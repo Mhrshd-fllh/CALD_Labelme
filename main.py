@@ -10,7 +10,7 @@ import cald_train
 def run_labelme(input_dir, output_dir):
     # Replace 'labelme' with the actual path to the labelme executable
     labelme_executable = os.path.join(
-        os.getcwd(), "labelme_project", "labelme", "labelme", "__main__.py"
+        os.getcwd(), "labelme_project", "labelme", "labelme", "app.py"
     )
 
     # Example command to run LabelMe
