@@ -34,7 +34,7 @@ from labelme.widgets import ToolBar
 from labelme.widgets import UniqueLabelQListWidget
 from labelme.widgets import ZoomWidget
 
-from cald_train import ModelConsistency
+import main
 
 import utils
 
@@ -2123,14 +2123,17 @@ class MainWindow(QtWidgets.QMainWindow):
         return images
 
     def trainModel(self):
-        model = ModelConsistency()
-        model.train_model()
+        main.train_request()
 
 
-if __name__ == "__main__":
+def main():
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName("Salam")
     win = MainWindow()
     win.show()
     win.raise_()
     sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()

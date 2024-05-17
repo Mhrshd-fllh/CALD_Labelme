@@ -1,22 +1,46 @@
 import os
 import json
+import random
+import shutil
 
 
 class DatasetConverter:
-    def __init__(self, input_dir, label_mapping, output_dir):
+    def __init__(self, input_dir, label_mapping, train_path, validation_path):
         self.input_dir = input_dir
         self.label_mapping = label_mapping
-        self.output_dir = output_dir
-        self.train_path = os.path.join(self.input_dir, "train")
-        self.validation_path = os.path.join(self.input_dir, "validation")
+        self.train_path = os.path.join(train_path, "labels")
+        self.validation_path = os.path.join(validation_path, "labels")
+        self.train_images = os.path.join(train_path, "images")
+        self.validation_images = os.path.join(validation_path, "images")
 
     def process_labelme_annotations(self):
         # Process each JSON file in the input_directory
-        for filename in os.listdir(self.input_dir):
+        labels = os.listdir()
+        random.shuffle(labels)
+        n = len(labels)
+        train_labels = labels[: int(0.8 * n)]
+        validation_labels = labels[int(0.8 * n) :]
+        for filename in train_labels:
             if filename.endswith(".json"):
                 self.labelme_json_path = os.path.join(self.input_dir, filename)
                 self.yolo_txt_path = os.path.join(
-                    self.output_dir, f"{os.path.splitext(filename)[0]}.txt"
+                    self.train_path, f"{os.path.splitext(filename)[0]}.txt"
+                )
+                self.labelme_to_yolo()
+
+        for filename in validation_labels:
+            if filename.endswith(".json"):
+                self.labelme_json_path = os.path.join(self.input_dir, filename)
+                self.yolo_txt_path = os.path.join(
+                    self.train_path, f"{os.path.splitext(filename)[0]}.txt"
+                )
+                shutil.move(
+                    os.path.join(
+                        self.train_images, f"{os.path.splitext(filename)[0]}.jpg"
+                    ),
+                    os.path.join(
+                        self.validation_images, f"{os.path.splitext(filename)[0]}.jpg"
+                    ),
                 )
                 self.labelme_to_yolo()
 
