@@ -8,6 +8,7 @@ import os.path as osp
 import re
 import webbrowser
 import sys
+import random
 
 import imgviz
 import natsort
@@ -34,7 +35,9 @@ from labelme.widgets import ToolBar
 from labelme.widgets import UniqueLabelQListWidget
 from labelme.widgets import ZoomWidget
 
-from .. import main
+from application import cald_train
+from application import converter
+
 
 import utils
 
@@ -53,12 +56,20 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(
         self,
+        train_path,
+        classes,
         config=None,
         filename=None,
         output=None,
         output_file=None,
         output_dir=None,
     ):
+
+        self.Zeroth_cycle = True
+        self.train_path = train_path
+        self.classes = classes
+        self.image_list = os.listdir(os.path.join(train_path, "images"))
+        self.model = cald_train.ModelConsistency(self.train_path, self.classes)
         if output is not None:
             logger.warning("argument output is deprecated, use output_file instead")
             if output_file is None:
@@ -2132,20 +2143,23 @@ class MainWindow(QtWidgets.QMainWindow):
         return images
 
     def trainModel(self):
-        main.train_request()
+        self.model.train_model()
 
     def SelectionImages(self):
-        main.select_images()
+        if self.Zeroth_cycle:
+            images = os.listdir(os.path.join(self.train_path, "images"))
+            random.shuffle(images)
+            self.image_list = images
+            
+        else:
+            images = self.model.select_images()
 
 
-def main():
+
+def main(train_path, classes):
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName("Salam")
-    win = MainWindow()
+    win = MainWindow(train_path, classes)
     win.show()
     win.raise_()
     sys.exit(app.exec())
-
-
-if __name__ == "__main__":
-    main()
