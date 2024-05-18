@@ -53,6 +53,7 @@ class ModelConsistency:
                 print(f"Proccessed {i} files out of {len(self.image_files)}")
         sorted_images = sorted(self.uncertainty_scores.items(), key=lambda x: x[1])
         sampeled_images = [image_file for image_file, _ in sorted_images]
+        return sampeled_images
 
     def train_model(self):
 
@@ -74,7 +75,7 @@ class ModelConsistency:
             weight_decay=0.0001,
             plots=False,
         )
-        self.model.save(os.path.join(os.getcwd(), "labelme_project", "last_save.pt"))
+        self.model.save(os.path.join(os.getcwd(), "best_save.pt"))
 
     def get_uncertainty(self, image_path):
         consistency1 = 0

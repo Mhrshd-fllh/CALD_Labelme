@@ -2,6 +2,8 @@ import os
 import subprocess
 from converter import DatasetConverter
 import yaml_creator
+import random
+import cald_train
 
 
 class MainApp:
@@ -12,6 +14,7 @@ class MainApp:
         self.labelme_anno_path = os.path.join(os.getcwd(), "dataset", "labelme")
         self.percentage = 0
         self.zeroth_cycle = True
+        self.model = cald_train.ModelConsistency(self.train_path, self.classes)
 
     def mapping_classes(self):
         temp = {}
@@ -29,7 +32,11 @@ class MainApp:
         subprocess.run(command)
 
     def train_model(self):
-        pass
+        self.model.train_model()
+
+    def non_zero_run(self):
+        images = self.model.select_images()
+        self.resorting(images)
 
     def convert_labels(self):
         conv = DatasetConverter(
@@ -37,7 +44,7 @@ class MainApp:
         )
         conv.process_labelme_annotations()
 
-    def resorting(self):
+    def resorting(self, train_images):
         pass
 
     def saving_model(self):
@@ -47,11 +54,12 @@ class MainApp:
         pass
 
     def zero_cycle_run(self):
-        pass
+        train_images = os.listdir(os.path.join(self.train_path, "images"))
+        random.shuffle(train_images)
+        self.resorting(train_images)
 
 
 def main():
-    app.mapping_classes()
     app.create_yaml()
     app.app_run()
     app.convert_labels()
@@ -60,11 +68,22 @@ def main():
 if __name__ == "__main__":
     print("Please enter the classes you want to detect:\n")
     classes = input().split()
+
+    temp = {}
+    for i, cl in enumerate(classes):
+        temp[i] = cl
+
+    classes = temp
+
     app = MainApp(classes)
     main()
 
-    def train_request():
+    def select_images():
         if app.zeroth_cycle:
             app.zero_cycle_run()
+            app.zeroth_cycle = False
         else:
-            app.train_model()
+            app.non_zero_run()
+
+    def train_model():
+        app.train_model()

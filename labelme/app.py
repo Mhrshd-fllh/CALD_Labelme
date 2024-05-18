@@ -34,7 +34,7 @@ from labelme.widgets import ToolBar
 from labelme.widgets import UniqueLabelQListWidget
 from labelme.widgets import ZoomWidget
 
-import main
+from .. import main
 
 import utils
 
@@ -401,6 +401,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         train = action("Train", self.trainModel, "train the model", icon="train")
 
+        ImageSelection = action(
+            "Selection",
+            self.SelectionImages,
+            "Select new Images for train",
+            icon="Selection",
+        )
         editMode = action(
             self.tr("Edit Polygons"),
             self.setEditMode,
@@ -635,6 +641,7 @@ class MainWindow(QtWidgets.QMainWindow):
             saveAs=saveAs,
             open=open_,
             train=train,
+            ImageSelection=ImageSelection,
             close=close,
             deleteFile=deleteFile,
             toggleKeepPrevMode=toggle_keep_prev_mode,
@@ -747,6 +754,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 deleteFile,
                 None,
                 train,
+                ImageSelection,
                 quit,
             ),
         )
@@ -825,6 +833,7 @@ class MainWindow(QtWidgets.QMainWindow):
             open_,
             opendir,
             train,
+            ImageSelection,
             openPrevImg,
             openNextImg,
             save,
@@ -2124,6 +2133,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def trainModel(self):
         main.train_request()
+
+    def SelectionImages(self):
+        main.select_images()
 
 
 def main():
