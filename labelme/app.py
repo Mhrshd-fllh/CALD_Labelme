@@ -36,7 +36,7 @@ from labelme.widgets import UniqueLabelQListWidget
 from labelme.widgets import ZoomWidget
 
 from application import cald_train
-from application import converter
+from application.converter import DatasetConverter
 
 
 import utils
@@ -2150,10 +2150,24 @@ class MainWindow(QtWidgets.QMainWindow):
             images = os.listdir(os.path.join(self.train_path, "images"))
             random.shuffle(images)
             self.image_list = images
-            
+            # Resorting Images
+            conv = DatasetConverter(
+                os.path.join(os.getcwd(), "dataset", "labelme"),
+                self.classes,
+                self.train_path,
+                os.path.join(os.getcwd(), "dataset", "validation"),
+            )
+            conv.process_labelme_annotations()
         else:
             images = self.model.select_images()
-
+            # Resorting Images
+            conv = DatasetConverter(
+                os.path.join(os.getcwd(), "dataset", "labelme"),
+                self.classes,
+                self.train_path,
+                os.path.join(os.getcwd(), "dataset", "validation"),
+            )
+            conv.process_labelme_annotations()
 
 
 def main(train_path, classes):
