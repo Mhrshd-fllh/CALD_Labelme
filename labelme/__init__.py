@@ -22,4 +22,3 @@ PY3 = sys.version[0] == "3"
 del sys
 
 from labelme.label_file import LabelFile
-from labelme import utils

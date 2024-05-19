@@ -20,7 +20,8 @@ from qtpy.QtCore import Qt
 from labelme import PY2
 from labelme import __appname__
 from labelme.ai import MODELS
-from labelme.config import get_config
+
+# from labelme.config import get_config
 from labelme.label_file import LabelFile
 from labelme.label_file import LabelFileError
 from labelme.logger import logger
@@ -1367,7 +1368,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 flags=flags,
             )
             self.labelFile = lf
-            items = self.fileListWidget.findItems(self.imagePath, Qt.MatchExactly)
+            items = self.fileListWidget.findItems(self.image_list, Qt.MatchExactly)
             if len(items) > 0:
                 if len(items) != 1:
                     raise RuntimeError("There are duplicate files.")
@@ -2142,15 +2143,20 @@ class MainWindow(QtWidgets.QMainWindow):
         images = natsort.os_sorted(images)
         return images
 
-    def trainModel(self):
+    def resort(self, filename):
+        return self.order_dict.get(filename, float("inf"))
+
+    def treainModel(self):
         self.model.train_model()
 
     def SelectionImages(self):
         if self.Zeroth_cycle:
             images = os.listdir(os.path.join(self.train_path, "images"))
             random.shuffle(images)
-            self.image_list = images
-            # Resorting Images
+            self.order_dict = {
+                filename: index for index, filename in enumerate(self.images)
+            }
+            self.image_list = sorted(self.images, key=self.resort)
             conv = DatasetConverter(
                 os.path.join(os.getcwd(), "dataset", "labelme"),
                 self.classes,
@@ -2159,8 +2165,11 @@ class MainWindow(QtWidgets.QMainWindow):
             )
             conv.process_labelme_annotations()
         else:
-            images = self.model.select_images()
-            # Resorting Images
+            self.images = self.model.select_images()
+            self.order_dict = {
+                filename: index for index, filename in enumerate(self.images)
+            }
+            self.image_list = sorted(self.images, key=self.resort)
             conv = DatasetConverter(
                 os.path.join(os.getcwd(), "dataset", "labelme"),
                 self.classes,
@@ -2172,7 +2181,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 def main(train_path, classes):
     app = QtWidgets.QApplication(sys.argv)
-    app.setApplicationName("Salam")
+    app.setApplicationName("labelme_cald")
     win = MainWindow(train_path, classes)
     win.show()
     win.raise_()
