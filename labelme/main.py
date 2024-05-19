@@ -1,7 +1,7 @@
 import os
-from labelme.application import yaml_creator
+from application import yaml_creator
 
-from labelme import app as application
+import app as application
 
 
 class MainApp:
