@@ -1,0 +1,12 @@
+python=3.9
+torchvision
+tqdm
+yaml
+ultralytics
+qtpy
+imgviz
+natsort
+gdown
+onnnxruntime
+scikit-image
+termcolor
