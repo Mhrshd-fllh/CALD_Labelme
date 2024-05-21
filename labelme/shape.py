@@ -6,8 +6,8 @@ import skimage.measure
 from qtpy import QtCore
 from qtpy import QtGui
 
-import labelme.utils
-from labelme.logger import logger
+import utils
+from logger import logger
 
 # TODO(unknown):
 # - [opt] Store paths instead of creating new ones at each paint.

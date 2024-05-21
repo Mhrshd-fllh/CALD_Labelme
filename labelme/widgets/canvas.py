@@ -3,11 +3,10 @@ from qtpy import QtCore
 from qtpy import QtGui
 from qtpy import QtWidgets
 
-import labelme.ai
-import labelme.utils
-from labelme import QT5
-from labelme.logger import logger
-from labelme.shape import Shape
+import ai
+import utils
+from logger import logger
+from shape import Shape
 
 # TODO(unknown):
 # - [maybe] Find optimal epsilon value.

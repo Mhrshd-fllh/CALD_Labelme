@@ -1,0 +1,7 @@
+path: C:\Mehrshad\Work\Projects\Data Science BootCamp\Projects\CALD_Labelme\CALD_Labelme\dataset
+train: 
+  - train/images
+val: 
+  - validation/images
+names: 
+  0: Dog

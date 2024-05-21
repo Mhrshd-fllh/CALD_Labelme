@@ -2,7 +2,7 @@ import imgviz
 import numpy as np
 import skimage
 
-from labelme.logger import logger
+from logger import logger
 
 
 def _get_contour_length(contour):

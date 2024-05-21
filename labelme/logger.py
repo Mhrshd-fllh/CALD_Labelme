@@ -10,7 +10,6 @@ if os.name == "nt":  # Windows
 
     colorama.init()
 
-from . import __appname__
 
 COLORS = {
     "WARNING": "yellow",
@@ -49,7 +48,7 @@ class ColoredFormatter(logging.Formatter):
         return logging.Formatter.format(self, record)
 
 
-logger = logging.getLogger(__appname__)
+logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 stream_handler = logging.StreamHandler(sys.stderr)
