@@ -20,7 +20,7 @@ from qtpy.QtCore import Qt
 
 from ai import MODELS
 
-# from config import get_config
+from config import get_config
 from label_file import LabelFile
 from label_file import LabelFileError
 from logger import logger
@@ -100,7 +100,7 @@ class MainWindow(QtWidgets.QMainWindow):
         Shape.point_size = self._config["shape"]["point_size"]
 
         super(MainWindow, self).__init__()
-        self.setWindowTitle(__appname__)
+        self.setWindowTitle("CALD Labelme")
 
         # Whether we need to save or not.
         self.dirty = False
@@ -863,7 +863,7 @@ class MainWindow(QtWidgets.QMainWindow):
             selectAiModel,
         )
 
-        self.statusBar().showMessage(str(self.tr("%s started.")) % __appname__)
+        self.statusBar().showMessage(str(self.tr("%s started.")) % "CALD Labelme")
         self.statusBar().show()
 
         if output_file is not None and self._config["auto_save"]:
@@ -982,7 +982,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         self.dirty = True
         self.actions.save.setEnabled(True)
-        title = __appname__
+        title = "CALD Labelme"
         if self.filename is not None:
             title = "{} - {}*".format(title, self.filename)
         self.setWindowTitle(title)
@@ -998,7 +998,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.createLineStripMode.setEnabled(True)
         self.actions.createAiPolygonMode.setEnabled(True)
         self.actions.createAiMaskMode.setEnabled(True)
-        title = __appname__
+        title = "CALD Labelme"
         if self.filename is not None:
             title = "{} - {}".format(title, self.filename)
         self.setWindowTitle(title)
@@ -1825,7 +1825,7 @@ class MainWindow(QtWidgets.QMainWindow):
         fileDialog.setFileMode(FileDialogPreview.ExistingFile)
         fileDialog.setNameFilter(filters)
         fileDialog.setWindowTitle(
-            self.tr("%s - Choose Image or Label file") % __appname__,
+            self.tr("%s - Choose Image or Label file") % "CALD Labelme",
         )
         fileDialog.setWindowFilePath(path)
         fileDialog.setViewMode(FileDialogPreview.Detail)
@@ -1843,7 +1843,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         output_dir = QtWidgets.QFileDialog.getExistingDirectory(
             self,
-            self.tr("%s - Save/Load Annotations in Directory") % __appname__,
+            self.tr("%s - Save/Load Annotations in Directory") % "CALD Labelme",
             default_output_dir,
             QtWidgets.QFileDialog.ShowDirsOnly
             | QtWidgets.QFileDialog.DontResolveSymlinks,
@@ -2052,7 +2052,7 @@ class MainWindow(QtWidgets.QMainWindow):
         targetDirPath = str(
             QtWidgets.QFileDialog.getExistingDirectory(
                 self,
-                self.tr("%s - Open Directory") % __appname__,
+                self.tr("%s - Open Directory") % "CALD Labelme",
                 defaultOpenDirPath,
                 QtWidgets.QFileDialog.ShowDirsOnly
                 | QtWidgets.QFileDialog.DontResolveSymlinks,
@@ -2152,10 +2152,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.Zeroth_cycle:
             images = os.listdir(os.path.join(self.train_path, "images"))
             random.shuffle(images)
-            self.order_dict = {
-                filename: index for index, filename in enumerate(self.images)
-            }
-            self.image_list = sorted(self.images, key=self.resort)
+            self.order_dict = {filename: index for index, filename in enumerate(images)}
+            self.image_list = sorted(images, key=self.resort)
             conv = DatasetConverter(
                 os.path.join(os.getcwd(), "dataset", "labelme"),
                 self.classes,
@@ -2163,12 +2161,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 os.path.join(os.getcwd(), "dataset", "validation"),
             )
             conv.process_labelme_annotations()
+            self.Zeroth_cycle = False
         else:
-            self.images = self.model.select_images()
-            self.order_dict = {
-                filename: index for index, filename in enumerate(self.images)
-            }
-            self.image_list = sorted(self.images, key=self.resort)
+            images = self.model.select_images()
+            self.order_dict = {filename: index for index, filename in enumerate(images)}
+            self.image_list = sorted(images, key=self.resort)
             conv = DatasetConverter(
                 os.path.join(os.getcwd(), "dataset", "labelme"),
                 self.classes,

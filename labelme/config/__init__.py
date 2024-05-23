@@ -1,100 +1,75 @@
-import collections
-import threading
+import os.path as osp
+import shutil
 
-import imgviz
-import numpy as np
-import onnxruntime
-import skimage
+import yaml
 
-from ..logger import logger
-from . import _utils
+from logger import logger
+
+here = osp.dirname(osp.abspath(__file__))
 
 
-class EfficientSam:
-    def __init__(self, encoder_path, decoder_path):
-        self._encoder_session = onnxruntime.InferenceSession(encoder_path)
-        self._decoder_session = onnxruntime.InferenceSession(decoder_path)
+def update_dict(target_dict, new_dict, validate_item=None):
+    for key, value in new_dict.items():
+        if validate_item:
+            validate_item(key, value)
+        if key not in target_dict:
+            logger.warn("Skipping unexpected key in config: {}".format(key))
+            continue
+        if isinstance(target_dict[key], dict) and isinstance(value, dict):
+            update_dict(target_dict[key], value, validate_item=validate_item)
+        else:
+            target_dict[key] = value
 
-        self._lock = threading.Lock()
-        self._image_embedding_cache = collections.OrderedDict()
 
-        self._thread = None
+# -----------------------------------------------------------------------------
 
-    def set_image(self, image: np.ndarray):
-        with self._lock:
-            self._image = image
-            self._image_embedding = self._image_embedding_cache.get(
-                self._image.tobytes()
-            )
 
-        if self._image_embedding is None:
-            self._thread = threading.Thread(
-                target=self._compute_and_cache_image_embedding
-            )
-            self._thread.start()
+def get_default_config():
+    config_file = osp.join(here, "default_config.yaml")
+    with open(config_file) as f:
+        config = yaml.safe_load(f)
 
-    def _compute_and_cache_image_embedding(self):
-        with self._lock:
-            logger.debug("Computing image embedding...")
-            image = imgviz.rgba2rgb(self._image)
-            batched_images = image.transpose(2, 0, 1)[None].astype(np.float32) / 255.0
-            (self._image_embedding,) = self._encoder_session.run(
-                output_names=None,
-                input_feed={"batched_images": batched_images},
-            )
-            if len(self._image_embedding_cache) > 10:
-                self._image_embedding_cache.popitem(last=False)
-            self._image_embedding_cache[self._image.tobytes()] = self._image_embedding
-            logger.debug("Done computing image embedding.")
+    # save default config to ~/.labelmerc
+    user_config_file = osp.join(osp.expanduser("~"), ".labelmerc")
+    if not osp.exists(user_config_file):
+        try:
+            shutil.copy(config_file, user_config_file)
+        except Exception:
+            logger.warn("Failed to save config: {}".format(user_config_file))
 
-    def _get_image_embedding(self):
-        if self._thread is not None:
-            self._thread.join()
-            self._thread = None
-        with self._lock:
-            return self._image_embedding
+    return config
 
-    def predict_mask_from_points(self, points, point_labels):
-        return _compute_mask_from_points(
-            decoder_session=self._decoder_session,
-            image=self._image,
-            image_embedding=self._get_image_embedding(),
-            points=points,
-            point_labels=point_labels,
+
+def validate_config_item(key, value):
+    if key == "validate_label" and value not in [None, "exact"]:
+        raise ValueError(
+            "Unexpected value for config key 'validate_label': {}".format(value)
+        )
+    if key == "shape_color" and value not in [None, "auto", "manual"]:
+        raise ValueError(
+            "Unexpected value for config key 'shape_color': {}".format(value)
+        )
+    if key == "labels" and value is not None and len(value) != len(set(value)):
+        raise ValueError(
+            "Duplicates are detected for config key 'labels': {}".format(value)
         )
 
-    def predict_polygon_from_points(self, points, point_labels):
-        mask = self.predict_mask_from_points(points=points, point_labels=point_labels)
-        return _utils.compute_polygon_from_mask(mask=mask)
 
+def get_config(config_file_or_yaml=None, config_from_args=None):
+    # 1. default config
+    config = get_default_config()
 
-def _compute_mask_from_points(
-    decoder_session, image, image_embedding, points, point_labels
-):
-    input_point = np.array(points, dtype=np.float32)
-    input_label = np.array(point_labels, dtype=np.float32)
+    # 2. specified as file or yaml
+    if config_file_or_yaml is not None:
+        config_from_yaml = yaml.safe_load(config_file_or_yaml)
+        if not isinstance(config_from_yaml, dict):
+            with open(config_from_yaml) as f:
+                logger.info("Loading config file from: {}".format(config_from_yaml))
+                config_from_yaml = yaml.safe_load(f)
+        update_dict(config, config_from_yaml, validate_item=validate_config_item)
 
-    # batch_size, num_queries, num_points, 2
-    batched_point_coords = input_point[None, None, :, :]
-    # batch_size, num_queries, num_points
-    batched_point_labels = input_label[None, None, :]
+    # 3. command line argument or specified config file
+    if config_from_args is not None:
+        update_dict(config, config_from_args, validate_item=validate_config_item)
 
-    decoder_inputs = {
-        "image_embeddings": image_embedding,
-        "batched_point_coords": batched_point_coords,
-        "batched_point_labels": batched_point_labels,
-        "orig_im_size": np.array(image.shape[:2], dtype=np.int64),
-    }
-
-    masks, _, _ = decoder_session.run(None, decoder_inputs)
-    mask = masks[0, 0, 0, :, :]  # (1, 1, 3, H, W) -> (H, W)
-    mask = mask > 0.0
-
-    MIN_SIZE_RATIO = 0.05
-    skimage.morphology.remove_small_objects(
-        mask, min_size=mask.sum() * MIN_SIZE_RATIO, out=mask
-    )
-
-    if 0:
-        imgviz.io.imsave("mask.jpg", imgviz.label2rgb(mask, imgviz.rgb2gray(image)))
-    return mask
+    return config
