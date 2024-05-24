@@ -1,4 +1,5 @@
 python=3.9
+qtpy5
 torchvision
 tqdm
 yaml

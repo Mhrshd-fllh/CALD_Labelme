@@ -69,6 +69,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.train_path = train_path
         self.classes = classes
         self.image_list = os.listdir(os.path.join(train_path, "images"))
+        self.image_list = [
+            os.path.join(train_path, "images", filename) for filename in self.image_list
+        ]
         self.model = cald_train.ModelConsistency(self.train_path, self.classes)
         if output is not None:
             logger.warning("argument output is deprecated, use output_file instead")
@@ -873,7 +876,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "set as IMAGE_BASENAME.json."
             )
         self.output_file = output_file
-        self.output_dir = output_dir
+        self.output_dir = os.path.join(os.getcwd(), "dataset", "labelme")
 
         # Application state.
         self.image = QtGui.QImage()
@@ -1333,7 +1336,7 @@ class MainWindow(QtWidgets.QMainWindow):
             data = s.other_data.copy()
             data.update(
                 dict(
-                    label=s.label.encode("utf-8") if PY2 else s.label,
+                    label=s.label,
                     points=[(p.x(), p.y()) for p in s.points],
                     group_id=s.group_id,
                     description=s.description,
@@ -1885,7 +1888,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._saveFile(self.saveFileDialog())
 
     def saveFileDialog(self):
-        caption = self.tr("%s - Choose File") % __appname__
+        caption = self.tr("%s - Choose File") % "CALD Labelme"
         filters = self.tr("Label files (*%s)") % LabelFile.suffix
         if self.output_dir:
             dlg = QtWidgets.QFileDialog(self, caption, self.output_dir, filters)
@@ -2062,11 +2065,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @property
     def imageList(self):
-        lst = []
-        for i in range(self.fileListWidget.count()):
-            item = self.fileListWidget.item(i)
-            lst.append(item.text())
-        return lst
+        return self.image_list
 
     def importDroppedImageFiles(self, imageFiles):
         extensions = [
@@ -2145,7 +2144,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def resort(self, filename):
         return self.order_dict.get(filename, float("inf"))
 
-    def treainModel(self):
+    def trainModel(self):
         self.model.train_model()
 
     def SelectionImages(self):
@@ -2154,6 +2153,10 @@ class MainWindow(QtWidgets.QMainWindow):
             random.shuffle(images)
             self.order_dict = {filename: index for index, filename in enumerate(images)}
             self.image_list = sorted(images, key=self.resort)
+            self.image_list = [
+                os.path.join(self.train_path, "images", filename)
+                for filename in self.image_list
+            ]
             conv = DatasetConverter(
                 os.path.join(os.getcwd(), "dataset", "labelme"),
                 self.classes,
@@ -2166,6 +2169,10 @@ class MainWindow(QtWidgets.QMainWindow):
             images = self.model.select_images()
             self.order_dict = {filename: index for index, filename in enumerate(images)}
             self.image_list = sorted(images, key=self.resort)
+            self.image_list = [
+                os.path.join(self.train_path, "images", filename)
+                for filename in self.image_list
+            ]
             conv = DatasetConverter(
                 os.path.join(os.getcwd(), "dataset", "labelme"),
                 self.classes,
@@ -2178,7 +2185,7 @@ class MainWindow(QtWidgets.QMainWindow):
 def main(train_path, classes):
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName("labelme_cald")
-    win = MainWindow(train_path, classes)
+    win = MainWindow(train_path, classes, filename=os.path.join(train_path, "images"))
     win.show()
     win.raise_()
     sys.exit(app.exec())

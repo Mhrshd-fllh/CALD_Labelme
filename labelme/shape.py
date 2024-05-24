@@ -191,7 +191,7 @@ class Shape(object):
                 else self.fill_color.getRgb()
             )
             image_to_draw[self.mask] = fill_color
-            qimage = QtGui.QImage.fromData(labelme.utils.img_arr_to_data(image_to_draw))
+            qimage = QtGui.QImage.fromData(utils.img_arr_to_data(image_to_draw))
             painter.drawImage(
                 int(round(self.points[0].x())),
                 int(round(self.points[0].y())),
@@ -287,7 +287,7 @@ class Shape(object):
         min_distance = float("inf")
         min_i = None
         for i, p in enumerate(self.points):
-            dist = labelme.utils.distance(p - point)
+            dist = utils.distance(p - point)
             if dist <= epsilon and dist < min_distance:
                 min_distance = dist
                 min_i = i
@@ -298,7 +298,7 @@ class Shape(object):
         post_i = None
         for i in range(len(self.points)):
             line = [self.points[i - 1], self.points[i]]
-            dist = labelme.utils.distancetoline(point, line)
+            dist = utils.distancetoline(point, line)
             if dist <= epsilon and dist < min_distance:
                 min_distance = dist
                 post_i = i
