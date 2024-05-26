@@ -15,7 +15,7 @@ class DatasetConverter:
 
     def process_labelme_annotations(self):
         # Process each JSON file in the input_directory
-        labels = os.listdir()
+        labels = os.listdir(self.input_dir)
         random.shuffle(labels)
         n = len(labels)
         train_labels = labels[: int(0.8 * n)]
