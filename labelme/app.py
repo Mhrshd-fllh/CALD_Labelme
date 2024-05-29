@@ -9,6 +9,7 @@ import re
 import webbrowser
 import sys
 import random
+import shutil
 
 import imgviz
 import natsort
@@ -2145,6 +2146,21 @@ class MainWindow(QtWidgets.QMainWindow):
         return self.order_dict.get(filename, float("inf"))
 
     def trainModel(self):
+        conv = DatasetConverter(
+            os.path.join(os.getcwd(), "dataset", "labelme"),
+            self.classes,
+            self.train_path,
+            os.path.join(os.getcwd(), "dataset", "validation"),
+        )
+        conv.process_labelme_annotations()
+        labelme_images = os.listdir(os.path.join(os.getcwd(), "dataset", "labelme"))
+        for filename in labelme_images:
+            file_path = os.path.join(
+                os.path.join(os.getcwd(), "dataset", "labelme", filename)
+            )
+            os.unlink(file_path)
+            shutil.rmtree(file_path)
+
         self.model.train_model()
 
     def SelectionImages(self):
@@ -2157,13 +2173,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 os.path.join(self.train_path, "images", filename)
                 for filename in self.image_list
             ]
-            conv = DatasetConverter(
-                os.path.join(os.getcwd(), "dataset", "labelme"),
-                self.classes,
-                self.train_path,
-                os.path.join(os.getcwd(), "dataset", "validation"),
-            )
-            conv.process_labelme_annotations()
+            self.fileListWidget.clear()
+            self.fileListWidget.addItems(self.image_list)
             self.Zeroth_cycle = False
         else:
             images = self.model.select_images()
@@ -2173,13 +2184,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 os.path.join(self.train_path, "images", filename)
                 for filename in self.image_list
             ]
-            conv = DatasetConverter(
-                os.path.join(os.getcwd(), "dataset", "labelme"),
-                self.classes,
-                self.train_path,
-                os.path.join(os.getcwd(), "dataset", "validation"),
-            )
-            conv.process_labelme_annotations()
+            self.fileListWidget.clear()
+            self.fileListWidget.addItems(self.image_list)
 
 
 def main(train_path, classes):
