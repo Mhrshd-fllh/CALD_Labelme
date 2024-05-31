@@ -1,1 +1,29 @@
-Consistency-Based Active Learning for Object Detection combined with LabelMe. In this project, we modified the CALD code available at https://github.com/we1pingyu/CALD for YOLOv8 and integrated it with LabelMe for custom datasets. Here's how the project operates: it retrieves the dataset from the 'dataset/input_files/all_images' directory and randomly selects images from this directory, moving them to train and validation directories. You then label these images using LabelMe, and the training process begins. Based on the inconsistency metrics of YOLO, we select additional images, label them, and continue training in cycles. After each cycle, the program closes, providing you with the last weights. You can then use these weights to detect objects of interest in another dataset. Please download LabelMe from https://github.com/labelmeai/labelme and move it to the 'labelme_project/labelme' directory to connect LabelMe with CALD.
+#CALD (Consistency-Based Active Learning for Object Detection) Labelme
+##Description
+Consistency-Based Active Learning for Object Detection combined with LabelMe. In this project, we modified the CALD code available at https://github.com/we1pingyu/CALD for YOLOv8 and integrated it with LabelMe for custom datasets.
+
+- [installation](#installation)
+- [Usage](#usage)
+- [Contact](#Contact)
+
+##Installation
+First Create an environment:
+```bash
+conda create -n "labelme" python=3.9
+```
+Then run command for installation of all packages:
+```bash
+pip install -r requirements.txt
+```
+
+##Usage
+First move your dataset to 'CALD_Labelme/dataset/train/images'.
+Then run below command:
+```bash
+python main.py
+```
+First press the Selection button and after that wait for dataset to shown up in the file list in the right. After labeling the files, you should press the train button and wait for training end and then you do it like a cycle and after all you have your results on runs folder on this directory that shows you the best and last epoch of each cycle.
+
+##Contact 
+- [Email] (fallah_mehrshad82@comp.iust.ac.ir)
+- [Telegram] (@Mehrshad_Fallah)
