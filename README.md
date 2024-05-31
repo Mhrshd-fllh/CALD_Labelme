@@ -37,4 +37,4 @@ For any inquiries, please reach out via email or telegram:
 - [[Telegram] (@Mehrshad_Fallah)](https://t.me/Mehrshad_Fallah)
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](License) file for details.
