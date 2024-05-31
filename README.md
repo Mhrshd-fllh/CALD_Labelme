@@ -4,7 +4,7 @@
 ![Version](https://img.shields.io/badge/version-1.0.0-orange)
 
 ## Description
-Consistency-Based Active Learning for Object Detection combined with LabelMe. In this project, we modified the CALD code available at [CALD GitHub](https://github.com/we1pingyu/CALD) for YOLOv8 and integrated it with LabelMe for custom datasets.
+Consistency-Based Active Learning for Object Detection combined with LabelMe. In this project, we modified the CALD code available at [CALD GitHub](https://github.com/we1pingyu/CALD) for YOLOv8 and integrated it with LabelMe for custom datasets. Check [Labelme](https://github.com/labelmeai/labelme) for labelme code.
 
 - [installation](#installation)
 - [Usage](#usage)
@@ -33,7 +33,7 @@ python main.py
 
 ## Contact 
 For any inquiries, please reach out via email or telegram:
-- Email:(fallah_mehrshad82[at]comp[dot]iust[dot]ac[dot]ir)
+- Email: (fallah_mehrshad82[at]comp[dot]iust[dot]ac[dot]ir)
 - [[Telegram] (@Mehrshad_Fallah)](https://t.me/Mehrshad_Fallah)
 
 ## License
