@@ -1,1 +1,40 @@
-Consistency-Based Active Learning for Object Detection combined with LabelMe. In this project, we modified the CALD code available at https://github.com/we1pingyu/CALD for YOLOv8 and integrated it with LabelMe for custom datasets. Here's how the project operates: it retrieves the dataset from the 'dataset/input_files/all_images' directory and randomly selects images from this directory, moving them to train and validation directories. You then label these images using LabelMe, and the training process begins. Based on the inconsistency metrics of YOLO, we select additional images, label them, and continue training in cycles. After each cycle, the program closes, providing you with the last weights. You can then use these weights to detect objects of interest in another dataset. Please download LabelMe from https://github.com/labelmeai/labelme and move it to the 'labelme_project/labelme' directory to connect LabelMe with CALD.
+# CALD (Consistency-Based Active Learning for Object Detection) Labelme
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Version](https://img.shields.io/badge/version-1.0.0-orange)
+
+## Description
+Consistency-Based Active Learning for Object Detection combined with LabelMe. In this project, we modified the CALD code available at [CALD GitHub](https://github.com/we1pingyu/CALD) for YOLOv8 and integrated it with LabelMe for custom datasets.
+
+- [installation](#installation)
+- [Usage](#usage)
+- [Contact](#Contact)
+- [License](#License)
+
+## Installation
+First Create an environment:
+```sh
+conda create -n "labelme" python=3.9
+```
+Then install all required packages:
+```sh
+pip install -r requirements.txt
+```
+
+## Usage
+1. Move your dataset to 'CALD_Labelme/dataset/train/images'.
+2. Run the following command:
+```sh
+python main.py
+```
+3. Press the "Selection" button and wait for the dataset to appear in the file list on the right.
+4. After labeling the files, press the "Train" button and wait for the training to finish.
+5. Repeat this cycle as needed. The results will be saved in the `runs` folder, showing the best and last epoch of each cycle.
+
+## Contact 
+For any inquiries, please reach out via email or telegram:
+- Email:(fallah_mehrshad82[at]comp[dot]iust[dot]ac[dot]ir)
+- [[Telegram] (@Mehrshad_Fallah)](https://t.me/Mehrshad_Fallah)
+
+## License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
