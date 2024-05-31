@@ -1,29 +1,40 @@
 # CALD (Consistency-Based Active Learning for Object Detection) Labelme
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Version](https://img.shields.io/badge/version-1.0.0-orange)
+
 ## Description
-Consistency-Based Active Learning for Object Detection combined with LabelMe. In this project, we modified the CALD code available at https://github.com/we1pingyu/CALD for YOLOv8 and integrated it with LabelMe for custom datasets.
+Consistency-Based Active Learning for Object Detection combined with LabelMe. In this project, we modified the CALD code available at [CALD GitHub](https://github.com/we1pingyu/CALD) for YOLOv8 and integrated it with LabelMe for custom datasets.
 
 - [installation](#installation)
 - [Usage](#usage)
 - [Contact](#Contact)
+- [License](#License)
 
 ## Installation
 First Create an environment:
-```cmd
+```sh
 conda create -n "labelme" python=3.9
 ```
-Then run command for installation of all packages:
-```cmd
+Then install all required packages:
+```sh
 pip install -r requirements.txt
 ```
 
 ## Usage
-First move your dataset to 'CALD_Labelme/dataset/train/images'.
-Then run below command:
-```cmd
+1. Move your dataset to 'CALD_Labelme/dataset/train/images'.
+2. Run the following command:
+```sh
 python main.py
 ```
-First press the Selection button and after that wait for dataset to shown up in the file list in the right. After labeling the files, you should press the train button and wait for training end and then you do it like a cycle and after all you have your results on runs folder on this directory that shows you the best and last epoch of each cycle.
+3. Press the "Selection" button and wait for the dataset to appear in the file list on the right.
+4. After labeling the files, press the "Train" button and wait for the training to finish.
+5. Repeat this cycle as needed. The results will be saved in the `runs` folder, showing the best and last epoch of each cycle.
 
 ## Contact 
-- [Email] (fallah_mehrshad82@comp.iust.ac.ir)
+For any inquiries, please reach out via email or telegram:
+- Email:(fallah_mehrshad82[at]comp[dot]iust[dot]ac[dot]ir)
 - [[Telegram] (@Mehrshad_Fallah)](https://t.me/Mehrshad_Fallah)
+
+## License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
