@@ -1,5 +1,5 @@
 # CALD (Consistency-Based Active Learning for Object Detection) Labelme
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![Build Status](https://img.shields.io/badge/build-coverage-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Version](https://img.shields.io/badge/version-2.0.0-orange)
 
