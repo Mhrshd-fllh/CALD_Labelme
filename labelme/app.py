@@ -66,7 +66,7 @@ class MainWindow(QtWidgets.QMainWindow):
         output_dir=None,
     ):
 
-        self.Zeroth_cycle = True
+        self.Zeroth_cycle = True if len(os.listdir(os.path.join(os.getcwd(), 'dataset','validation', 'images'))) == 0 else False
         self.train_path = train_path
         self.classes = classes
         self.image_list = os.listdir(os.path.join(train_path, "images"))
@@ -2158,7 +2158,6 @@ class MainWindow(QtWidgets.QMainWindow):
             file_path = os.path.join(
                 os.path.join(os.getcwd(), "dataset", "labelme", filename)
             )
-            os.unlink(file_path)
             shutil.rmtree(file_path)
 
         self.model.train_model()

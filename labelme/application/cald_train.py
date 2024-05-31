@@ -33,7 +33,7 @@ class ModelConsistency:
         self.data_path = os.path.join(os.getcwd(), "dataset.yaml")
 
     def select_images(self):
-        torch.cuda.set_device(0)
+        # torch.cuda.set_device(0)
         random.seed(0)
         torch.manual_seed(0)
         torch.cuda.manual_seed(0)
@@ -241,7 +241,7 @@ class ModelConsistency:
         image = F.to_tensor(image.resize((ow, oh), Image.BILINEAR))
         image = F.to_pil_image(image)
 
-        return image
+        return image, boxes * ratio
 
     def rotate(self, image, boxes, angle, device="cpu"):
         if isinstance(image, Image.Image):
@@ -343,13 +343,13 @@ class ModelConsistency:
         boxes2 = boxes2.to(device)
 
         max_xy = torch.min(
-            boxes1[:, 2:].unsqueeze().expand(n1, n2, 2),
-            boxes2[:, 2:].unsqueeze().expand(n1, n2, 2),
+            boxes1[:, 2:].unsqueeze(1).expand(n1, n2, 2),
+            boxes2[:, 2:].unsqueeze(0).expand(n1, n2, 2),
         )
 
         min_xy = torch.max(
-            boxes1[:, 2:].unsqueeze().expand(n1, n2, 2),
-            boxes2[:, 2:].unsqueeze().expand(n1, n2, 2),
+            boxes1[:, 2:].unsqueeze(1).expand(n1, n2, 2),
+            boxes2[:, 2:].unsqueeze(0).expand(n1, n2, 2),
         )
         inter = torch.clamp(max_xy - min_xy, min=0)
         return inter[:, :, 0] * inter[:, :, 1]
