@@ -6,6 +6,7 @@ import math
 import os
 import os.path as osp
 import re
+from weakref import finalize
 import webbrowser
 import sys
 import random
@@ -66,7 +67,14 @@ class MainWindow(QtWidgets.QMainWindow):
         output_dir=None,
     ):
 
-        self.Zeroth_cycle = True if len(os.listdir(os.path.join(os.getcwd(), 'dataset','validation', 'images'))) == 0 else False
+        self.Zeroth_cycle = (
+            True
+            if len(
+                os.listdir(os.path.join(os.getcwd(), "dataset", "validation", "images"))
+            )
+            == 0
+            else False
+        )
         self.train_path = train_path
         self.classes = classes
         self.image_list = os.listdir(os.path.join(train_path, "images"))
@@ -2153,12 +2161,6 @@ class MainWindow(QtWidgets.QMainWindow):
             os.path.join(os.getcwd(), "dataset", "validation"),
         )
         conv.process_labelme_annotations()
-        labelme_images = os.listdir(os.path.join(os.getcwd(), "dataset", "labelme"))
-        for filename in labelme_images:
-            file_path = os.path.join(
-                os.path.join(os.getcwd(), "dataset", "labelme", filename)
-            )
-            shutil.rmtree(file_path)
 
         self.model.train_model()
 
