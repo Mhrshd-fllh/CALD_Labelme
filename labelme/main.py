@@ -27,6 +27,13 @@ class MainApp:
 
 
 def main():
+    os.mkdir("dataset")
+    os.mkdir("dataset/labelme")
+    os.mkdir("dataset/train/images")
+    os.mkdir("dataset/train/labels")
+    os.mkdir("dataset/validation/images")
+    os.mkdir("dataset/validation/labels")
+    os.mkdir("dataset/unlabeled")
     app.create_yaml()
     app.app_run()
 

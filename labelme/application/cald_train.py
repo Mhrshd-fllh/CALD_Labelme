@@ -31,6 +31,7 @@ class ModelConsistency:
         self.classes = classes
         self.model = YOLO("yolov8n.pt", verbose=False)
         self.data_path = os.path.join(os.getcwd(), "dataset.yaml")
+        self.unlabeled = os.path.join(os.getcwd(), "dataset", "unlabeled")
 
     def select_images(self):
         # torch.cuda.set_device(0)
@@ -40,11 +41,11 @@ class ModelConsistency:
         torch.cuda.manual_seed_all(0)
         np.random.seed(0)
 
-        self.image_files = os.listdir(self.train_path_images)
+        self.image_files = os.listdir(self.unlabeled)
         self.uncertainty_scores = {}
 
         for i, image_file in enumerate(self.image_files):
-            image_path = os.path.join(self.train_path_images, image_file)
+            image_path = os.path.join(self.unlabeled, image_file)
             image = Image.open(image_path)
             uncertainty_score = self.get_uncertainty(image)
             self.uncertainty_scores[image_file] = uncertainty_score
@@ -80,7 +81,7 @@ class ModelConsistency:
     def get_uncertainty(self, image_path):
         consistency1 = 0
         consistency2 = 0
-        original_image_results = self.model(self.train_path_images, verbose=False)
+        original_image_results = self.model(self.unlabeled, verbose=False)
 
         if len(original_image_results[0].boxes) == 0:
             return 2

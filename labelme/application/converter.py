@@ -12,6 +12,7 @@ class DatasetConverter:
         self.validation_path = os.path.join(validation_path, "labels")
         self.train_images = os.path.join(train_path, "images")
         self.validation_images = os.path.join(validation_path, "images")
+        self.unlabeled = os.path.join(os.getcwd(), "dataset", "unlabeled")
 
     def process_labelme_annotations(self):
         # Process each JSON file in the input_directory
@@ -21,22 +22,38 @@ class DatasetConverter:
         train_labels = labels[: int(0.8 * n)]
         validation_labels = labels[int(0.8 * n) :]
         for filename in train_labels:
-            if filename.endswith(".json"):
-                self.labelme_json_path = os.path.join(self.input_dir, filename)
-                self.yolo_txt_path = os.path.join(
-                    self.train_path, f"{os.path.splitext(filename)[0]}.txt"
-                )
-                self.labelme_to_yolo()
-
-        for filename in validation_labels:
-            if filename.endswith(".json"):
+            if (
+                filename.endswith(".json")
+                and f"{os.path.splitext(filename)}.txt" not in train_labels
+                and f"{os.path.splitext(filename)}.txt" not in self.validation_path
+            ):
                 self.labelme_json_path = os.path.join(self.input_dir, filename)
                 self.yolo_txt_path = os.path.join(
                     self.train_path, f"{os.path.splitext(filename)[0]}.txt"
                 )
                 shutil.move(
                     os.path.join(
+                        self.unlabeled, f"{os.path.splitext(filename)[0]}.jpg"
+                    ),
+                    os.path.join(
                         self.train_images, f"{os.path.splitext(filename)[0]}.jpg"
+                    ),
+                )
+                self.labelme_to_yolo()
+        # print("train done")
+        for filename in validation_labels:
+            if (
+                filename.endswith(".json")
+                and f"{os.path.splitext(filename)}.txt" not in self.train_path
+                and f"{os.path.splitext(filename)}.txt" not in self.validation_path
+            ):
+                self.labelme_json_path = os.path.join(self.input_dir, filename)
+                self.yolo_txt_path = os.path.join(
+                    self.validation_path, f"{os.path.splitext(filename)[0]}.txt"
+                )
+                shutil.move(
+                    os.path.join(
+                        self.unlabeled, f"{os.path.splitext(filename)[0]}.jpg"
                     ),
                     os.path.join(
                         self.validation_images, f"{os.path.splitext(filename)[0]}.jpg"

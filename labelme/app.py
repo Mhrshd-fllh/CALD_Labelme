@@ -75,6 +75,7 @@ class MainWindow(QtWidgets.QMainWindow):
             == 0
             else False
         )
+        self.unlabeled = os.path.join(os.getcwd(), "dataset", "unlabeled")
         self.train_path = train_path
         self.classes = classes
         self.image_list = os.listdir(os.path.join(train_path, "images"))
@@ -2166,7 +2167,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def SelectionImages(self):
         if self.Zeroth_cycle:
-            images = os.listdir(os.path.join(self.train_path, "images"))
+            images = os.listdir(self.unlabeled)
             random.shuffle(images)
             self.order_dict = {filename: index for index, filename in enumerate(images)}
             self.image_list = sorted(images, key=self.resort)
