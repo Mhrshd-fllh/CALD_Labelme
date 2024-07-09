@@ -537,7 +537,7 @@ class MainWindow(QtWidgets.QMainWindow):
             icon="help",
             tip=self.tr("Show tutorial page"),
         )
-        utils.addActions(self.progress_widget, self.trainModel)
+        # utils.addActions(self.progress_widget, self.trainModel)
         zoom = QtWidgets.QWidgetAction(self)
         zoomBoxLayout = QtWidgets.QVBoxLayout()
         zoomLabel = QtWidgets.QLabel("Zoom")
@@ -882,7 +882,6 @@ class MainWindow(QtWidgets.QMainWindow):
             zoom,
             None,
             selectAiModel,
-            progress_bar,
         )
 
         self.statusBar().showMessage(str(self.tr("%s started.")) % "CALD Labelme")
@@ -1236,9 +1235,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.edit.setEnabled(n_selected == 1)
 
     def addLabels(self):
-        lst = self.classes.values()
-        for name in lst:
-            self.labelList.addItem(name)
+        labels = self.classes.values()
+        for label in labels:
+            item = self.uniqLabelList.createItemFromLabel(label)
+            self.uniqLabelList.addItem(item)
+            rgb = self._get_rgb_by_label(label)
+            self.uniqLabelList.setItemLabel(item, label, rgb)
+            self.labelDialog.addLabelHistory(label)
+            for action in self.actions.onShapesPresent:
+                action.setEnabled(True)
 
     def addLabel(self, shape):
         if shape.group_id is None:
@@ -2176,7 +2181,11 @@ class MainWindow(QtWidgets.QMainWindow):
             os.path.join(os.getcwd(), "dataset", "validation"),
         )
         conv.process_labelme_annotations()
+        self.statusbar().showMessage("Training model. Please wait...")
+        self.statusbar().show()
         self.model.train_model()
+        self.statusbar().showMessage(self.model.evaluation())
+        self.statusbar().show()
 
     def SelectionImages(self):
         if self.Zeroth_cycle:

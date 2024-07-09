@@ -33,6 +33,10 @@ class ModelConsistency:
         self.data_path = os.path.join(os.getcwd(), "dataset.yaml")
         self.unlabeled = os.path.join(os.getcwd(), "dataset", "unlabeled")
 
+    def evaluation(self):
+        metrics = self.model.val()
+        return str(metrics.box.map50)
+
     def select_images(self):
         # torch.cuda.set_device(0)
         random.seed(0)
