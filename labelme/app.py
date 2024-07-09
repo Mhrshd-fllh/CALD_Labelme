@@ -185,6 +185,14 @@ class MainWindow(QtWidgets.QMainWindow):
         fileListWidget.setLayout(fileListLayout)
         self.file_dock.setWidget(fileListWidget)
 
+        # self.progress_widget = QtWidgets.QWidget()
+        # layout = QtWidgets.QHBoxLayout()
+        # progress_bar = QtWidgets.QProgressBar()
+        # progress_bar.setMinimum(0)
+        # progress_bar.setMaximum(100)
+        # layout.addWidget(progress_bar)
+        # self.progress_widget.setLayout(layout)
+
         self.zoomWidget = ZoomWidget()
         self.setAcceptDrops(True)
 
@@ -529,7 +537,7 @@ class MainWindow(QtWidgets.QMainWindow):
             icon="help",
             tip=self.tr("Show tutorial page"),
         )
-
+        utils.addActions(self.progress_widget, self.trainModel)
         zoom = QtWidgets.QWidgetAction(self)
         zoomBoxLayout = QtWidgets.QVBoxLayout()
         zoomLabel = QtWidgets.QLabel("Zoom")
@@ -874,6 +882,7 @@ class MainWindow(QtWidgets.QMainWindow):
             zoom,
             None,
             selectAiModel,
+            progress_bar,
         )
 
         self.statusBar().showMessage(str(self.tr("%s started.")) % "CALD Labelme")
@@ -1225,6 +1234,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.duplicate.setEnabled(n_selected)
         self.actions.copy.setEnabled(n_selected)
         self.actions.edit.setEnabled(n_selected == 1)
+
+    def addLabels(self):
+        lst = self.classes.values()
+        for name in lst:
+            self.labelList.addItem(name)
 
     def addLabel(self, shape):
         if shape.group_id is None:
@@ -2162,7 +2176,6 @@ class MainWindow(QtWidgets.QMainWindow):
             os.path.join(os.getcwd(), "dataset", "validation"),
         )
         conv.process_labelme_annotations()
-
         self.model.train_model()
 
     def SelectionImages(self):
@@ -2172,7 +2185,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.order_dict = {filename: index for index, filename in enumerate(images)}
             self.image_list = sorted(images, key=self.resort)
             self.image_list = [
-                os.path.join(self.train_path, "images", filename)
+                os.path.join(self.unlabeled, "images", filename)
                 for filename in self.image_list
             ]
             self.fileListWidget.clear()
@@ -2183,7 +2196,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.order_dict = {filename: index for index, filename in enumerate(images)}
             self.image_list = sorted(images, key=self.resort)
             self.image_list = [
-                os.path.join(self.train_path, "images", filename)
+                os.path.join(self.unlabeled, "images", filename)
                 for filename in self.image_list
             ]
             self.fileListWidget.clear()
@@ -2193,7 +2206,8 @@ class MainWindow(QtWidgets.QMainWindow):
 def main(train_path, classes):
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName("labelme_cald")
-    win = MainWindow(train_path, classes, filename=os.path.join(train_path, "images"))
+    win = MainWindow(train_path, classes)
+    win.addLabels()
     win.show()
     win.raise_()
     sys.exit(app.exec())

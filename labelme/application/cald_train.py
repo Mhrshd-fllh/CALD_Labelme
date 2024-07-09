@@ -66,7 +66,7 @@ class ModelConsistency:
             f"Number of Labels: ",
             len([file for file in os.listdir(self.train_path_labels)]),
         )
-        self.model.train(
+        return self.model.train(
             data=self.data_path,
             epochs=20,
             momentum=0.9,
@@ -74,9 +74,8 @@ class ModelConsistency:
             batch=4,
             workers=4,
             weight_decay=0.0001,
-            plots=False,
+            plots=True,
         )
-        self.model.save(os.path.join(os.getcwd(), "best_save.pt"))
 
     def get_uncertainty(self, image_path):
         consistency1 = 0

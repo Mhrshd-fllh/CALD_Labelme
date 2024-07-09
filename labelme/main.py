@@ -29,6 +29,8 @@ class MainApp:
 def main():
     os.mkdir("dataset")
     os.mkdir("dataset/labelme")
+    os.mkdir("dataset/train")
+    os.mkdir("dataset/validation")
     os.mkdir("dataset/train/images")
     os.mkdir("dataset/train/labels")
     os.mkdir("dataset/validation/images")

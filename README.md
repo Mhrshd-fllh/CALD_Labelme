@@ -22,7 +22,7 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-1. Move your dataset to 'CALD_Labelme/dataset/train/images'.
+1. Move your dataset to 'CALD_Labelme/dataset/unlabeled'.
 2. Run the following command:
 ```sh
 python main.py
