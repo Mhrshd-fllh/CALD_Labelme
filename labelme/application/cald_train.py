@@ -16,7 +16,7 @@ from scipy.stats import entropy
 import shutil
 from ultralytics.models import YOLO
 
-# torch.cuda.set_device(0)
+torch.cuda.set_device(0)
 random.seed(0)
 torch.manual_seed(0)
 torch.cuda.manual_seed(0)
@@ -38,7 +38,7 @@ class ModelConsistency:
         return str(metrics.box.map50)
 
     def select_images(self):
-        # torch.cuda.set_device(0)
+        torch.cuda.set_device(0)
         random.seed(0)
         torch.manual_seed(0)
         torch.cuda.manual_seed(0)
@@ -70,7 +70,7 @@ class ModelConsistency:
             f"Number of Labels: ",
             len([file for file in os.listdir(self.train_path_labels)]),
         )
-        return self.model.train(
+        self.model.train(
             data=self.data_path,
             epochs=20,
             momentum=0.9,
