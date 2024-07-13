@@ -75,7 +75,6 @@ class MainWindow(QtWidgets.QMainWindow):
             == 0
             else False
         )
-        self.unlabeled = os.path.join(os.getcwd(), "dataset", "unlabeled")
         self.train_path = train_path
         self.classes = classes
         self.image_list = os.listdir(os.path.join(train_path, "images"))
@@ -83,6 +82,7 @@ class MainWindow(QtWidgets.QMainWindow):
             os.path.join(train_path, "images", filename) for filename in self.image_list
         ]
         self.model = cald_train.ModelConsistency(self.train_path, self.classes)
+        self.unlabeled = ""
         if output is not None:
             logger.warning("argument output is deprecated, use output_file instead")
             if output_file is None:
@@ -2090,6 +2090,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 | QtWidgets.QFileDialog.DontResolveSymlinks,
             )
         )
+        self.unlabeled = targetDirPath
         self.importDirImages(targetDirPath)
 
     @property
@@ -2179,6 +2180,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.classes,
             self.train_path,
             os.path.join(os.getcwd(), "dataset", "validation"),
+            self.unlabeled,
         )
         conv.process_labelme_annotations()
         self.statusbar().showMessage("Training model. Please wait...")
@@ -2194,19 +2196,17 @@ class MainWindow(QtWidgets.QMainWindow):
             self.order_dict = {filename: index for index, filename in enumerate(images)}
             self.image_list = sorted(images, key=self.resort)
             self.image_list = [
-                os.path.join(self.unlabeled, "images", filename)
-                for filename in self.image_list
+                os.path.join(self.unlabeled, filename) for filename in self.image_list
             ]
             self.fileListWidget.clear()
             self.fileListWidget.addItems(self.image_list)
             self.Zeroth_cycle = False
         else:
-            images = self.model.select_images()
+            images = self.model.select_images(self.unlabeled)
             self.order_dict = {filename: index for index, filename in enumerate(images)}
             self.image_list = sorted(images, key=self.resort)
             self.image_list = [
-                os.path.join(self.unlabeled, "images", filename)
-                for filename in self.image_list
+                os.path.join(self.unlabeled, filename) for filename in self.image_list
             ]
             self.fileListWidget.clear()
             self.fileListWidget.addItems(self.image_list)

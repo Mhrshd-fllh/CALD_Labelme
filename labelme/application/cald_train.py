@@ -31,27 +31,25 @@ class ModelConsistency:
         self.classes = classes
         self.model = YOLO("yolov8n.pt", verbose=False)
         self.data_path = os.path.join(os.getcwd(), "dataset.yaml")
-        self.unlabeled = os.path.join(os.getcwd(), "dataset", "unlabeled")
 
     def evaluation(self):
         metrics = self.model.val()
         return str(metrics.box.map50)
 
-    def select_images(self):
+    def select_images(self, unlabeled):
         torch.cuda.set_device(0)
         random.seed(0)
         torch.manual_seed(0)
         torch.cuda.manual_seed(0)
         torch.cuda.manual_seed_all(0)
         np.random.seed(0)
-
-        self.image_files = os.listdir(self.unlabeled)
+        self.image_files = os.listdir(unlabeled)
         self.uncertainty_scores = {}
 
         for i, image_file in enumerate(self.image_files):
-            image_path = os.path.join(self.unlabeled, image_file)
+            image_path = os.path.join(unlabeled, image_file)
             image = Image.open(image_path)
-            uncertainty_score = self.get_uncertainty(image)
+            uncertainty_score = self.get_uncertainty(image, unlabeled)
             self.uncertainty_scores[image_file] = uncertainty_score
 
             if i % 100 == 0:
@@ -80,11 +78,12 @@ class ModelConsistency:
             weight_decay=0.0001,
             plots=True,
         )
+        self.model.save(os.path.join(os.getcwd(), "best_save.pt"))
 
-    def get_uncertainty(self, image_path):
+    def get_uncertainty(self, image_path, unlabeled):
         consistency1 = 0
         consistency2 = 0
-        original_image_results = self.model(self.unlabeled, verbose=False)
+        original_image_results = self.model(unlabeled, verbose=False)
 
         if len(original_image_results[0].boxes) == 0:
             return 2

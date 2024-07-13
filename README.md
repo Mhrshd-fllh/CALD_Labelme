@@ -22,14 +22,13 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-1. Move your dataset to 'CALD_Labelme/dataset/unlabeled'.
-2. Run the following command:
+1. Run the following command:
 ```sh
 python main.py
 ```
-3. Press the "Selection" button and wait for the dataset to appear in the file list on the right.
-4. After labeling the files, press the "Train" button and wait for the training to finish.
-5. Repeat this cycle as needed. The results will be saved in the `runs` folder, showing the best and last epoch of each cycle.
+2. Press the "Selection" button and wait for the dataset to appear in the file list on the right.
+3. After labeling the files, press the "Train" button and wait for the training to finish.
+4. Repeat this cycle as needed. The results will be saved in the `runs` folder, showing the best and last epoch of each cycle.
 
 ## Contact 
 For any inquiries, please reach out via email or telegram:

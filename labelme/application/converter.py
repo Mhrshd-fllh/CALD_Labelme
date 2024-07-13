@@ -5,14 +5,16 @@ import shutil
 
 
 class DatasetConverter:
-    def __init__(self, input_dir, label_mapping, train_path, validation_path):
+    def __init__(
+        self, input_dir, label_mapping, train_path, validation_path, unlabeled
+    ):
         self.input_dir = input_dir
         self.label_mapping = label_mapping
         self.train_path = os.path.join(train_path, "labels")
         self.validation_path = os.path.join(validation_path, "labels")
         self.train_images = os.path.join(train_path, "images")
         self.validation_images = os.path.join(validation_path, "images")
-        self.unlabeled = os.path.join(os.getcwd(), "dataset", "unlabeled")
+        self.unlabeled = unlabeled
 
     def process_labelme_annotations(self):
         # Process each JSON file in the input_directory
