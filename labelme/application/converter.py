@@ -33,7 +33,7 @@ class DatasetConverter:
                 self.yolo_txt_path = os.path.join(
                     self.train_path, f"{os.path.splitext(filename)[0]}.txt"
                 )
-                shutil.move(
+                shutil.copy(
                     os.path.join(
                         self.unlabeled, f"{os.path.splitext(filename)[0]}.jpg"
                     ),
@@ -53,7 +53,7 @@ class DatasetConverter:
                 self.yolo_txt_path = os.path.join(
                     self.validation_path, f"{os.path.splitext(filename)[0]}.txt"
                 )
-                shutil.move(
+                shutil.copy(
                     os.path.join(
                         self.unlabeled, f"{os.path.splitext(filename)[0]}.jpg"
                     ),

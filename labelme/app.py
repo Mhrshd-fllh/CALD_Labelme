@@ -1399,7 +1399,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 flags=flags,
             )
             self.labelFile = lf
-            items = self.fileListWidget.findItems(self.image_list, Qt.MatchExactly)
+            items = self.fileListWidget.findItems(imagePath, Qt.MatchExactly)
             if len(items) > 0:
                 if len(items) != 1:
                     raise RuntimeError("There are duplicate files.")
@@ -2183,11 +2183,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.unlabeled,
         )
         conv.process_labelme_annotations()
-        self.statusbar().showMessage("Training model. Please wait...")
-        self.statusbar().show()
+        self.statusBar().showMessage("Training model. Please wait...")
+        self.statusBar().show()
         self.model.train_model()
-        self.statusbar().showMessage(self.model.evaluation())
-        self.statusbar().show()
+        self.statusBar().showMessage(self.model.evaluation())
+        self.statusBar().show()
 
     def SelectionImages(self):
         if self.Zeroth_cycle:
