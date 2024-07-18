@@ -2183,9 +2183,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.unlabeled,
         )
         conv.process_labelme_annotations()
-        self.statusBar().showMessage("Training model. Please wait...")
-        self.statusBar().show()
         self.model.train_model()
+        mess = self.model.evaluation()
+        self.statusBar().showMessage(f"Model Validation Score: {mess}")
+        self.statusBar().show()
 
     def SelectionImages(self):
         if self.Zeroth_cycle:

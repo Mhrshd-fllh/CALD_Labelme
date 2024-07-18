@@ -34,7 +34,7 @@ class ModelConsistency:
 
     def evaluation(self):
         metrics = self.model.val()
-        return str(metrics.box.map50)
+        return metrics.box.map50
 
     def select_images(self, unlabeled):
         torch.cuda.set_device(0)
