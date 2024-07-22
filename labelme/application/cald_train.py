@@ -15,13 +15,76 @@ import datetime
 from scipy.stats import entropy
 import shutil
 from ultralytics.models import YOLO
+import sys
+from PyQt5.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout, QApplication
+from PyQt5.QtCore import QTimer, QThread, pyqtSignal, QEventLoop
+import time
 
-torch.cuda.set_device(0)
+# torch.cuda.set_device(0)
 random.seed(0)
 torch.manual_seed(0)
 torch.cuda.manual_seed(0)
 torch.cuda.manual_seed_all(0)
 np.random.seed(0)
+
+
+class MessageDialog(QDialog):
+    def __init__(self, len_images, len_labels, parent=None):
+        super().__init__(parent)
+
+        self.len_images = len_images
+        self.len_labels = len_labels
+        self.message_index = 0
+        self.final_message = "Training finished. \nPress button to close Dialog."
+        self.messages = [
+            f"Number of Images : {len_images} \n Number of Labels : {len_labels}",
+            f"Training in Process. \nPlease Wait.",
+        ]
+
+        self.init_ui()
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_message)
+        self.timer.start(5000)
+
+    def init_ui(self):
+        self.label = QLabel(self.messages[self.message_index], self)
+        layout = QVBoxLayout()
+        layout.addWidget(self.label)
+
+        self.setLayout(layout)
+        self.setWindowTitle("Waiting Message Dialog.")
+
+    def update_message(self):
+        self.message_index = (self.message_index + 1) % len(self.messages)
+        self.label.setText(self.messages[self.message_index])
+
+    def show_final_message(self):
+        self.label.setText(self.final_message)
+        self.timer.stop()
+
+
+class TrainingThread(QThread):
+    update_signal = pyqtSignal()
+
+    def __init__(self, model, data_path):
+        super().__init__()
+        self.model = model
+        self.data_path = data_path
+
+    def run(self):
+        self.model.train(
+            data=self.data_path,
+            epochs=20,
+            momentum=0.9,
+            optimizer="SGD",
+            batch=4,
+            workers=4,
+            weight_decay=0.0001,
+            plots=True,
+        )
+        self.model.save(os.path.join(os.getcwd(), "best_save.pt"))
+        self.update_signal.emit()  # Signal to update the dialog when training is done
 
 
 class ModelConsistency:
@@ -32,12 +95,8 @@ class ModelConsistency:
         self.model = YOLO("yolov8n.pt", verbose=False)
         self.data_path = os.path.join(os.getcwd(), "dataset.yaml")
 
-    def evaluation(self):
-        metrics = self.model.val()
-        return metrics.box.map50
-
     def select_images(self, unlabeled):
-        torch.cuda.set_device(0)
+        # torch.cuda.set_device(0)
         random.seed(0)
         torch.manual_seed(0)
         torch.cuda.manual_seed(0)
@@ -58,27 +117,27 @@ class ModelConsistency:
         sampeled_images = [image_file for image_file, _ in sorted_images]
         return sampeled_images
 
+    def evaluate(self):
+        metrics = self.model.val()
+
+        return metrics.box.map50
+
     def train_model(self):
 
-        print(
-            f"Number of Images: ",
+        dialog = MessageDialog(
             len([file for file in os.listdir(self.train_path_images)]),
-        )
-        print(
-            f"Number of Labels: ",
             len([file for file in os.listdir(self.train_path_labels)]),
         )
-        self.model.train(
-            data=self.data_path,
-            epochs=20,
-            momentum=0.9,
-            optimizer="SGD",
-            batch=4,
-            workers=4,
-            weight_decay=0.0001,
-            plots=True,
-        )
-        self.model.save(os.path.join(os.getcwd(), "best_save.pt"))
+        loop = QEventLoop()
+
+        self.thread = TrainingThread(self.model, self.data_path)
+        self.thread.update_signal.connect(dialog.show_final_message)
+        self.thread.finished.connect(loop.quit)
+        self.thread.finished.connect(dialog.close)
+        self.thread.start()
+
+        dialog.show()
+        loop.exec_()
 
     def get_uncertainty(self, image_path, unlabeled):
         consistency1 = 0
