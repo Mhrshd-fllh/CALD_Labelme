@@ -16,6 +16,10 @@ First Create an environment:
 ```sh
 conda create -n "labelme" python=3.9
 ```
+Activate the envrionment:
+```sh
+conda activate labelme
+```
 Then install all required packages:
 ```sh
 pip install -r requirements.txt
