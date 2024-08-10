@@ -2185,7 +2185,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         conv.process_labelme_annotations()
         self.model.train_model()
-        mess = self.model.evaluation()
+        mess = self.model.evaluate()
         self.statusBar().showMessage(f"Model Validation Score: {mess}")
         self.statusBar().show()
 
