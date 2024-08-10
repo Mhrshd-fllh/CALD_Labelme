@@ -16,6 +16,10 @@ First Create an environment:
 ```sh
 conda create -n "labelme" python=3.9
 ```
+Activate the envrionment:
+```sh
+conda activate labelme
+```
 Then install all required packages:
 ```sh
 pip install -r requirements.txt
@@ -24,7 +28,7 @@ pip install -r requirements.txt
 ## Usage
 1. Run the following command:
 ```sh
-python main.py
+python labelme/main.py
 ```
 2. Press the "Selection" button and wait for the dataset to appear in the file list on the right.
 3. After labeling the files, press the "Train" button and wait for the training to finish.
