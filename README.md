@@ -24,6 +24,10 @@ Then install all required packages:
 ```sh
 pip install -r requirements.txt
 ```
+If you have GPU you can run this command too:
+```sh
+python -m pip install torch==1.13.1+cu117 torchvision>=0.13.1+cu117 torchaudio>=0.13.1+cu117 --extra-index-url https://download.pytorch.org/whl/cu117
+```
 
 ## Usage
 1. Run the following command:
