@@ -208,7 +208,7 @@ class SelectionThread(QThread):
                 image_file in self.train_labeled_set
                 or image_file in self.validation_labeled_set
             ):
-                uncertainty_score = float("inf")
+                uncertainty_score = 0
             else:
                 image_path = os.path.join(self.unlabeled, image_file)
                 image = Image.open(image_path)
