@@ -16,19 +16,15 @@ class DatasetConverter:
         self.validation_images = os.path.join(validation_path, "images")
         self.unlabeled = unlabeled
 
-    def process_labelme_annotations(self):
+    def process_labelme_annotations(self, train_labeled_set, validation_labeled_set):
         # Process each JSON file in the input_directory
         labels = os.listdir(self.input_dir)
         random.shuffle(labels)
         n = len(labels)
         train_labels = labels[: int(0.8 * n)]
         validation_labels = labels[int(0.8 * n) :]
-        for filename in train_labels:
-            if (
-                filename.endswith(".json")
-                and f"{os.path.splitext(filename)}.txt" not in train_labels
-                and f"{os.path.splitext(filename)}.txt" not in self.validation_path
-            ):
+        for filename in train_labeled_set:
+            if filename.endswith(".json"):
                 self.labelme_json_path = os.path.join(self.input_dir, filename)
                 self.yolo_txt_path = os.path.join(
                     self.train_path, f"{os.path.splitext(filename)[0]}.txt"
@@ -41,14 +37,12 @@ class DatasetConverter:
                         self.train_images, f"{os.path.splitext(filename)[0]}.jpg"
                     ),
                 )
+                train_labeled_set.append(f"{os.path.splitext(filename)[0]}.jpg")
                 self.labelme_to_yolo()
+
         # print("train done")
-        for filename in validation_labels:
-            if (
-                filename.endswith(".json")
-                and f"{os.path.splitext(filename)}.txt" not in self.train_path
-                and f"{os.path.splitext(filename)}.txt" not in self.validation_path
-            ):
+        for filename in validation_labeled_set:
+            if filename.endswith(".json"):
                 self.labelme_json_path = os.path.join(self.input_dir, filename)
                 self.yolo_txt_path = os.path.join(
                     self.validation_path, f"{os.path.splitext(filename)[0]}.txt"
@@ -61,7 +55,9 @@ class DatasetConverter:
                         self.validation_images, f"{os.path.splitext(filename)[0]}.jpg"
                     ),
                 )
+                validation_labeled_set.append(f"{os.path.splitext(filename)[0]}.jpg")
                 self.labelme_to_yolo()
+        return train_labeled_set, validation_labeled_set
 
     def labelme_to_yolo(self):
         with open(self.labelme_json_path, "r") as json_file:

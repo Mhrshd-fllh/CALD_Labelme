@@ -37,7 +37,7 @@ from widgets import ToolBar
 from widgets import UniqueLabelQListWidget
 from widgets import ZoomWidget
 
-from application import cald_train
+from application import cald_train, yaml_creator
 from application.converter import DatasetConverter
 
 
@@ -59,7 +59,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(
         self,
         train_path,
-        classes,
         config=None,
         filename=None,
         output=None,
@@ -75,8 +74,11 @@ class MainWindow(QtWidgets.QMainWindow):
             == 0
             else False
         )
+        self.classes = {}
+        self.counter = 0
+        self.train_labeled_set = []
+        self.validation_labeled_set = []
         self.train_path = train_path
-        self.classes = classes
         self.image_list = os.listdir(os.path.join(train_path, "images"))
         self.image_list = [
             os.path.join(train_path, "images", filename) for filename in self.image_list
@@ -431,13 +433,21 @@ class MainWindow(QtWidgets.QMainWindow):
             )
         )
 
-        train = action("Train", self.trainModel, "train the model", icon="train")
+        train = action(
+            "Train", self.trainModel, "train the model", icon="deep-learning"
+        )
 
         ImageSelection = action(
             "Selection",
             self.SelectionImages,
             "Select new Images for train",
-            icon="Selection",
+            icon="selection",
+        )
+        background = action(
+            "Background",
+            self.SetBackgrounds,
+            "Save File as background",
+            icon="background",
         )
         editMode = action(
             self.tr("Edit Polygons"),
@@ -674,6 +684,7 @@ class MainWindow(QtWidgets.QMainWindow):
             open=open_,
             train=train,
             ImageSelection=ImageSelection,
+            background=background,
             close=close,
             deleteFile=deleteFile,
             toggleKeepPrevMode=toggle_keep_prev_mode,
@@ -787,6 +798,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 None,
                 train,
                 ImageSelection,
+                background,
                 quit,
             ),
         )
@@ -866,6 +878,7 @@ class MainWindow(QtWidgets.QMainWindow):
             opendir,
             train,
             ImageSelection,
+            background,
             openPrevImg,
             openNextImg,
             save,
@@ -1234,17 +1247,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.copy.setEnabled(n_selected)
         self.actions.edit.setEnabled(n_selected == 1)
 
-    def addLabels(self):
-        labels = self.classes.values()
-        for label in labels:
-            item = self.uniqLabelList.createItemFromLabel(label)
-            self.uniqLabelList.addItem(item)
-            rgb = self._get_rgb_by_label(label)
-            self.uniqLabelList.setItemLabel(item, label, rgb)
-            self.labelDialog.addLabelHistory(label)
-            for action in self.actions.onShapesPresent:
-                action.setEnabled(True)
-
     def addLabel(self, shape):
         if shape.group_id is None:
             text = shape.label
@@ -1260,6 +1262,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelDialog.addLabelHistory(shape.label)
         for action in self.actions.onShapesPresent:
             action.setEnabled(True)
+        self.new_class(text)
 
         self._update_shape_color(shape)
         label_list_item.setText(
@@ -1267,6 +1270,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 html.escape(text), *shape.fill_color.getRgb()[:3]
             )
         )
+    
+    def new_class(self, class_):
+        lst = list(self.classes.values())
+        lst.append(class_)
+        tmp = {}
+        for i, class_ in enumerate(lst):
+            tmp[i] = class_
+        self.classes = tmp{}
 
     def _update_shape_color(self, shape):
         r, g, b = self._get_rgb_by_label(shape.label)
@@ -2172,6 +2183,14 @@ class MainWindow(QtWidgets.QMainWindow):
         images = natsort.os_sorted(images)
         return images
 
+    def setBackgrounds(self):
+        if self.counter == 4:
+            self.validation_labeled_set.append(self.image)
+            self.counter = 0
+        else:
+            self.train_labeled_set.append(self.image)
+            self.counter += 1
+
     def resort(self, filename):
         return self.order_dict.get(filename, float("inf"))
 
@@ -2183,11 +2202,26 @@ class MainWindow(QtWidgets.QMainWindow):
             os.path.join(os.getcwd(), "dataset", "validation"),
             self.unlabeled,
         )
-        conv.process_labelme_annotations()
+        self.train_labeled_set, self.validation_labeled_set = (
+            conv.process_labelme_annotations(
+                self.train_labeled_set, self.validation_labeled_set
+            )
+        )
+        yaml_creator.create_yaml_file(self.classes)
         self.model.train_model()
         mess = self.model.evaluate()
         self.statusBar().showMessage(f"Model Validation Score: {mess}")
         self.statusBar().show()
+        image_path = osp.join(self.train_path, "images")
+        label_path = osp.join(self.train_path, "labels")
+        val_img_path = osp.join(os.getcwd(), "dataset", "validation", "images")
+        val_lbs_path = osp.join(os.getcwd(), "dataset", "validation", "labels")
+        path_list = [image_path, label_path, val_img_path, val_lbs_path]
+        for path in path_list:
+            lst = os.listdir(path)
+            for filename in lst:
+                pth = osp.join(path, filename)
+                os.unlink(pth)
 
     def SelectionImages(self):
         if self.Zeroth_cycle:
@@ -2212,11 +2246,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.fileListWidget.addItems(self.image_list)
 
 
-def main(train_path, classes):
+def main(train_path):
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName("labelme_cald")
-    win = MainWindow(train_path, classes)
-    win.addLabels()
+    win = MainWindow(train_path)
     win.show()
     win.raise_()
     sys.exit(app.exec())

@@ -16,16 +16,25 @@ from scipy.stats import entropy
 import shutil
 from ultralytics.models import YOLO
 import sys
-from PyQt5.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout, QApplication
+from PyQt5.QtWidgets import (
+    QDialog,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QApplication,
+    QProgressBar,
+)
 from PyQt5.QtCore import QTimer, QThread, pyqtSignal, QEventLoop
+from PyQt5.QtGui import QCloseEvent
 import time
 
-# torch.cuda.set_device(0)
-random.seed(0)
-torch.manual_seed(0)
-torch.cuda.manual_seed(0)
-torch.cuda.manual_seed_all(0)
-np.random.seed(0)
+if torch.cuda.is_available():
+    torch.cuda.set_device(0)
+random.seed(42)
+torch.manual_seed(42)
+torch.cuda.manual_seed(42)
+torch.cuda.manual_seed_all(42)
+np.random.seed(42)
 
 
 class MessageDialog(QDialog):
@@ -37,8 +46,8 @@ class MessageDialog(QDialog):
         self.message_index = 0
         self.final_message = "Training finished. \nPress button to close Dialog."
         self.messages = [
-            f"Number of Images : {len_images} \n Number of Labels : {len_labels}",
-            f"Training in Process. \nPlease Wait.",
+            f"Number of Images: {len_images}\nNumber of Labels: {len_labels}",
+            f"Training in Process.\nPlease Wait.",
         ]
 
         self.init_ui()
@@ -48,12 +57,24 @@ class MessageDialog(QDialog):
         self.timer.start(5000)
 
     def init_ui(self):
-        self.label = QLabel(self.messages[self.message_index], self)
         layout = QVBoxLayout()
+
+        # Message Label
+        self.label = QLabel(self.messages[self.message_index], self)
         layout.addWidget(self.label)
 
+        # Progress Bar
+        self.progress_bar = QProgressBar(self)
+        layout.addWidget(self.progress_bar)
+
+        # Close Button (initially hidden)
+        self.close_button = QPushButton("Close", self)
+        self.close_button.setVisible(False)
+        self.close_button.clicked.connect(self.accept)  # Closes the dialog
+        layout.addWidget(self.close_button)
+
         self.setLayout(layout)
-        self.setWindowTitle("Waiting Message Dialog.")
+        self.setWindowTitle("Training Progress")
 
     def update_message(self):
         self.message_index = (self.message_index + 1) % len(self.messages)
@@ -62,9 +83,21 @@ class MessageDialog(QDialog):
     def show_final_message(self):
         self.label.setText(self.final_message)
         self.timer.stop()
+        self.progress_bar.setValue(100)
+        self.close_button.setVisible(True)
+
+    def update_progress(self, value):
+        self.progress_bar.setValue(value)
+
+    def closeEvent(self, event: QCloseEvent):
+        # Ensure that the training thread is stopped before closing the dialog
+        if self.timer.isActive():
+            self.timer.stop()
+        event.accept()
 
 
 class TrainingThread(QThread):
+    update_progress = pyqtSignal(int)
     update_signal = pyqtSignal()
 
     def __init__(self, model, data_path):
@@ -73,18 +106,131 @@ class TrainingThread(QThread):
         self.data_path = data_path
 
     def run(self):
-        self.model.train(
-            data=self.data_path,
-            epochs=20,
-            momentum=0.9,
-            optimizer="SGD",
-            batch=4,
-            workers=4,
-            weight_decay=0.0001,
-            plots=True,
-        )
+        total_epochs = 20
+        for epoch in range(total_epochs):
+            # Simulate the training process
+            self.model.train(
+                data=self.data_path,
+                epochs=1,
+                momentum=0.9,
+                optimizer="SGD",
+                batch=4,
+                workers=4,
+                weight_decay=0.0001,
+                plots=True,
+            )
+            self.update_progress.emit((epoch + 1) * 100 // total_epochs)
         self.model.save(os.path.join(os.getcwd(), "best_save.pt"))
         self.update_signal.emit()  # Signal to update the dialog when training is done
+
+
+class SelectionDialog(QDialog):
+    def __init__(self, total_images, parent=None):
+        super().__init__(parent)
+
+        self.total_images = total_images
+        self.message_index = 0
+        self.final_message = "Image Selection finished.\nPress button to close Dialog."
+        self.messages = [
+            f"Total Images: {total_images}",
+            f"Selecting Images based on uncertainty scores.\nPlease Wait.",
+        ]
+
+        self.init_ui()
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_message)
+        self.timer.start(5000)
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+
+        # Message Label
+        self.label = QLabel(self.messages[self.message_index], self)
+        layout.addWidget(self.label)
+
+        # Progress Bar
+        self.progress_bar = QProgressBar(self)
+        layout.addWidget(self.progress_bar)
+
+        # Close Button (initially hidden)
+        self.close_button = QPushButton("Close", self)
+        self.close_button.setVisible(False)
+        self.close_button.clicked.connect(self.accept)  # Closes the dialog
+        layout.addWidget(self.close_button)
+
+        self.setLayout(layout)
+        self.setWindowTitle("Image Selection Progress")
+
+    def update_message(self):
+        self.message_index = (self.message_index + 1) % len(self.messages)
+        self.label.setText(self.messages[self.message_index])
+
+    def show_final_message(self):
+        self.label.setText(self.final_message)
+        self.timer.stop()
+        self.progress_bar.setValue(100)
+        self.close_button.setVisible(True)
+
+    def update_progress(self, value):
+        self.progress_bar.setValue(value)
+
+
+class SelectionThread(QThread):
+    update_progress = pyqtSignal(int)
+    update_signal = pyqtSignal()
+
+    def __init__(
+        self, unlabeled, train_labeled_set, validation_labeled_set, model_consistency
+    ):
+        super().__init__()
+        self.unlabeled = unlabeled
+        self.train_labeled_set = train_labeled_set
+        self.validation_labeled_set = validation_labeled_set
+        self.model_consistency = model_consistency
+        self.sampled_images = []
+
+    def run(self):
+        # Seed setting for reproducibility
+        random.seed(0)
+        torch.manual_seed(0)
+        torch.cuda.manual_seed(0)
+        torch.cuda.manual_seed_all(0)
+        np.random.seed(0)
+
+        self.model_consistency.image_files = os.listdir(self.unlabeled)
+        self.model_consistency.uncertainty_scores = {}
+
+        total_images = len(self.model_consistency.image_files)
+
+        for i, image_file in enumerate(self.model_consistency.image_files):
+            if (
+                image_file in self.train_labeled_set
+                or image_file in self.validation_labeled_set
+            ):
+                uncertainty_score = float("inf")
+            else:
+                image_path = os.path.join(self.unlabeled, image_file)
+                image = Image.open(image_path)
+                uncertainty_score = self.model_consistency.get_uncertainty(
+                    image, self.unlabeled
+                )
+            self.model_consistency.uncertainty_scores[image_file] = uncertainty_score
+
+            # Update progress
+            progress = (i + 1) * 100 // total_images
+            self.update_progress.emit(progress)
+
+        sorted_images = sorted(
+            self.model_consistency.uncertainty_scores.items(), key=lambda x: x[1]
+        )
+        self.sampled_images = [image_file for image_file, _ in sorted_images]
+
+        # Emit signal to indicate selection is complete
+        self.update_signal.emit()
+
+    def get_sampled_images(self):
+        return self.sampled_images
 
 
 class ModelConsistency:
@@ -95,35 +241,31 @@ class ModelConsistency:
         self.model = YOLO("yolov8n.pt", verbose=False)
         self.data_path = os.path.join(os.getcwd(), "dataset.yaml")
 
-    def select_images(self, unlabeled):
-        # torch.cuda.set_device(0)
-        random.seed(0)
-        torch.manual_seed(0)
-        torch.cuda.manual_seed(0)
-        torch.cuda.manual_seed_all(0)
-        np.random.seed(0)
-        self.image_files = os.listdir(unlabeled)
-        self.uncertainty_scores = {}
+    def select_images(self, unlabeled, train_labeled_set, validation_labeled_set):
+        dialog = SelectionDialog(total_images=len(os.listdir(unlabeled)))
+        loop = QEventLoop()
 
-        for i, image_file in enumerate(self.image_files):
-            image_path = os.path.join(unlabeled, image_file)
-            image = Image.open(image_path)
-            uncertainty_score = self.get_uncertainty(image, unlabeled)
-            self.uncertainty_scores[image_file] = uncertainty_score
+        self.selection_thread = SelectionThread(
+            unlabeled, train_labeled_set, validation_labeled_set, self
+        )
+        self.selection_thread.update_progress.connect(dialog.update_progress)
+        self.selection_thread.update_signal.connect(dialog.show_final_message)
+        self.selection_thread.finished.connect(loop.quit)
+        self.selection_thread.finished.connect(dialog.close)
+        self.selection_thread.start()
 
-            if i % 100 == 0:
-                print(f"Proccessed {i} files out of {len(self.image_files)}")
-        sorted_images = sorted(self.uncertainty_scores.items(), key=lambda x: x[1])
-        sampeled_images = [image_file for image_file, _ in sorted_images]
-        return sampeled_images
+        dialog.show()
+        loop.exec_()
+
+        # Retrieve the sampled images after the thread finishes
+        sampled_images = self.selection_thread.get_sampled_images()
+        return sampled_images
 
     def evaluate(self):
         metrics = self.model.val()
-
         return metrics.box.map50
 
     def train_model(self):
-
         dialog = MessageDialog(
             len([file for file in os.listdir(self.train_path_images)]),
             len([file for file in os.listdir(self.train_path_labels)]),
@@ -132,6 +274,7 @@ class ModelConsistency:
 
         self.thread = TrainingThread(self.model, self.data_path)
         self.thread.update_signal.connect(dialog.show_final_message)
+        self.thread.update_progress.connect(dialog.update_progress)
         self.thread.finished.connect(loop.quit)
         self.thread.finished.connect(dialog.close)
         self.thread.start()
