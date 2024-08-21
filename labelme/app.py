@@ -40,6 +40,7 @@ from widgets import ZoomWidget
 from application import cald_train, yaml_creator
 from application.converter import DatasetConverter
 
+import pandas as pd
 
 import utils
 
@@ -75,9 +76,16 @@ class MainWindow(QtWidgets.QMainWindow):
             else False
         )
         self.classes = {}
-        self.counter = 0
-        self.train_labeled_set = []
-        self.validation_labeled_set = []
+
+        (
+            self.train_labeled_set,
+            self.validation_labeled_set,
+            self.train_background_set,
+            self.validation_background_set,
+        ) = load_states()
+        self.counter = (
+            len(self.train_background_set) + len(self.validation_background_set)
+        ) % 5
         self.train_path = train_path
         self.image_list = os.listdir(os.path.join(train_path, "images"))
         self.image_list = [
@@ -445,7 +453,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         background = action(
             "Background",
-            self.SetBackgrounds,
+            self.setBackgrounds,
             "Save File as background",
             icon="background",
         )
@@ -1270,14 +1278,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 html.escape(text), *shape.fill_color.getRgb()[:3]
             )
         )
-    
+
     def new_class(self, class_):
         lst = list(self.classes.values())
         lst.append(class_)
         tmp = {}
         for i, class_ in enumerate(lst):
             tmp[i] = class_
-        self.classes = tmp{}
+        self.classes = tmp
 
     def _update_shape_color(self, shape):
         r, g, b = self._get_rgb_by_label(shape.label)
@@ -2185,16 +2193,40 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setBackgrounds(self):
         if self.counter == 4:
-            self.validation_labeled_set.append(self.image)
+            image = str(self.imagePath).split("\\")[-1]
+            self.validation_background_set.append(self.imagePath)
             self.counter = 0
+
+            print(image)
         else:
-            self.train_labeled_set.append(self.image)
+            image = str(self.imagePath).split("\\")[-1]
+            self.train_background_set.append(self.imagePath)
             self.counter += 1
+
+            print(image)
+
+    def moveBackgrounds(self):
+        for image in self.validation_background_set:
+            shutil.copy(
+                osp.join(self.unlabeled, image),
+                osp.join(os.getcwd(), "dataset", "validation", "images"),
+            )
+        for image in self.train_background_set:
+            shutil.copy(
+                osp.join(self.unlabeled, image),
+                osp.join(os.getcwd(), "dataset", "train", "images"),
+            )
 
     def resort(self, filename):
         return self.order_dict.get(filename, float("inf"))
 
     def trainModel(self):
+        save_states(
+            self.train_labeled_set,
+            self.validation_labeled_set,
+            self.train_background_set,
+            self.validation_background_set,
+        )
         conv = DatasetConverter(
             os.path.join(os.getcwd(), "dataset", "labelme"),
             self.classes,
@@ -2236,7 +2268,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.fileListWidget.addItems(self.image_list)
             self.Zeroth_cycle = False
         else:
-            images = self.model.select_images(self.unlabeled)
+            images = self.model.select_images(
+                self.unlabeled, self.train_labeled_set, self.validation_labeled_set
+            )
             self.order_dict = {filename: index for index, filename in enumerate(images)}
             self.image_list = sorted(images, key=self.resort)
             self.image_list = [
@@ -2252,4 +2286,47 @@ def main(train_path):
     win = MainWindow(train_path)
     win.show()
     win.raise_()
+
     sys.exit(app.exec())
+
+
+def save_states(
+    train_labeled_set,
+    validation_labeled_set,
+    train_background_set,
+    validation_background_set,
+):
+    data = pd.DataFrame(train_labeled_set)
+    data.to_csv("train_labeled_set.csv")
+    data = pd.DataFrame(validation_labeled_set)
+    data.to_csv("validation_labeled_set.csv")
+    data = pd.DataFrame(train_background_set)
+    data.to_csv("train_background_set.csv")
+    data = pd.DataFrame(validation_background_set)
+    data.to_csv("validation_background_set.csv")
+
+
+def load_states():
+    train_labeled_set = []
+    validation_labeled_set = []
+    train_background_set = []
+    validation_background_set = []
+    if os.path.exists(osp.join(os.getcwd(), "train_labeled_set.csv")):
+        data = pd.read_csv("train_labeled_set.csv")
+        train_labeled_set = list(data[0])
+    if os.path.exists(osp.join(os.getcwd(), "validation_labeled_set.csv")):
+        data = pd.read_csv("validation_labeled_set.csv")
+        validation_labeled_set = list(data[0])
+    if os.path.exists(osp.join(os.getcwd(), "train_backfround_set.csv")):
+        data = pd.read_csv("train_background_set.csv")
+        train_background_set = list(data[0])
+    if os.path.exists(osp.join(os.getcwd(), "validation_background_set.csv")):
+        data = pd.read_csv("validation_background_set.csv")
+        validation_background_set = list(data[0])
+
+    return (
+        train_labeled_set,
+        validation_labeled_set,
+        train_background_set,
+        validation_background_set,
+    )

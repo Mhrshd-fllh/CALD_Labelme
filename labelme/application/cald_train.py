@@ -117,7 +117,6 @@ class TrainingThread(QThread):
                 batch=4,
                 workers=4,
                 weight_decay=0.0001,
-                plots=True,
             )
             self.update_progress.emit((epoch + 1) * 100 // total_epochs)
         self.model.save(os.path.join(os.getcwd(), "best_save.pt"))

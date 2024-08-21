@@ -16,15 +16,18 @@ class MainApp:
 
 
 def main():
-    os.mkdir("dataset")
-    os.mkdir("dataset/labelme")
-    os.mkdir("dataset/train")
-    os.mkdir("dataset/validation")
-    os.mkdir("dataset/train/images")
-    os.mkdir("dataset/train/labels")
-    os.mkdir("dataset/validation/images")
-    os.mkdir("dataset/validation/labels")
-    app.app_run()
+    if os.path.exists(os.path.join(os.getcwd(), "dataset")):
+        app.app_run()
+    else:
+        os.mkdir("dataset")
+        os.mkdir("dataset/labelme")
+        os.mkdir("dataset/train")
+        os.mkdir("dataset/validation")
+        os.mkdir("dataset/train/images")
+        os.mkdir("dataset/train/labels")
+        os.mkdir("dataset/validation/images")
+        os.mkdir("dataset/validation/labels")
+        app.app_run()
 
 
 if __name__ == "__main__":

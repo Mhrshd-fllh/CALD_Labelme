@@ -23,6 +23,8 @@ class DatasetConverter:
         n = len(labels)
         train_labels = labels[: int(0.8 * n)]
         validation_labels = labels[int(0.8 * n) :]
+        train_labeled_set = train_labels
+        validation_labeled_set = validation_labels
         for filename in train_labeled_set:
             if filename.endswith(".json"):
                 self.labelme_json_path = os.path.join(self.input_dir, filename)
